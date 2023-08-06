@@ -10,7 +10,7 @@ from pypylon import pylon
 import serial, time
 import cv2
 
-#arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.5) - establishes link between Arduino and PC (Baudrate 9600 bits per second)
+arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.5)# - establishes link between Arduino and PC (Baudrate 9600 bits per second)
 flow_on = 0; # Bolean var defines wether or not there's flow
 
 # conecting to the first available camera
