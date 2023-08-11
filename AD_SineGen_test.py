@@ -14,8 +14,16 @@ sys.path.append('/Applications/WaveForms.app/Contents/Resources/SDK/samples/py')
 from dwfconstants import *
 import cv2
 
-#%
 
+# Checks if the system is windows (win) or Mac os (darwin) and then find path to dwf: /Library/Frameworks/dwf.framework/dwf
+if sys.platform.startswith("win"):
+    dwf = cdll.dwf
+elif sys.platform.startswith("darwin"): 
+    dwf = cdll.LoadLibrary("/Applications/WaveForms.app/Contents/Frameworks/dwf.framework/dwf")
+
+        
+hdwf = c_int()
+channel = c_int(0)
 
 
 i = 1
@@ -25,15 +33,7 @@ while i>0:
     img = cv2.imread('/Users/joakimpihl/Desktop/img1.jpeg')
     cv2.imshow('title', img)
     
-    if l==70:
-        # Checks if the system is windows (win) or Mac os (darwin) and then find path to dwf: /Library/Frameworks/dwf.framework/dwf
-        if sys.platform.startswith("win"):
-            dwf = cdll.dwf
-        elif sys.platform.startswith("darwin"): 
-            dwf = cdll.LoadLibrary("/Applications/WaveForms.app/Contents/Frameworks/dwf.framework/dwf")
-            
-        hdwf = c_int()
-        channel = c_int(0)
+    if l==102: # press f
         
         #Retrieves the API version
         #version = create_string_buffer(16)
@@ -65,7 +65,11 @@ while i>0:
         dwf.FDwfAnalogOutConfigure(hdwf, channel, c_int(1)) #This func configures/starts the device with the specified configuration.
         
         #dwf.FDwfDeviceClose(hdwf)
-    elif l == 27:
+    elif l == 103: # press g
+        print("Stopping sine wave...")
+        dwf.FDwfAnalogOutConfigure(hdwf, channel, c_int(0)) # Stops the sine function
+        #dwf.FDwfDeviceClose(hdwf)
+    elif l == 27: # press esc
         break
         
         
