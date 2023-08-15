@@ -21,7 +21,17 @@ from dwfconstants import *
 
 
 
-def AD_Connect():
+### Function for connecting to the analog discovery
+
+def Connect():
+    """
+    This function connects to the Analog discovery.
+
+    Returns
+    -------
+    None.
+
+    """
     # Checks if the system is windows (win) or Mac os (darwin) and then find path to dwf: /Library/Frameworks/dwf.framework/dwf
     if sys.platform.startswith("win"):
         dwf = cdll.dwf
@@ -39,7 +49,16 @@ def AD_Connect():
     dwf.FDwfDeviceOpen(c_int(-1), byref(hdwf))
     
     return
+
+
+
+### Functino for disconnecting the analog discovery
+def disconnect():
+    dwf.FDwfDeviceCloseAll()
+    
+    return
             
+    
     
 ### Function for generating a sound siganl
 
@@ -82,6 +101,8 @@ def funcGen(shape=funcSine,freq=1.91,Amplitude=1,v_Offset=0):
     
     return 
 
+
+
 ###  Function for stopping the sound signal
 
 def funcStop():
@@ -101,16 +122,18 @@ def funcStop():
 
 ### Function for doing a frequency
 
-def sweep(HzStart, HzStop, HzStep, HzTime=5):
-    # Prevent temperature drift - Specifies Analog discovery behavior upon closure of the program
-    dwf.FDwfParamSet(DwfParamOnClose, c_int(0)) # 0 = run, 1 = stop, 2 = shutdown
+def sweep(HzStart, HzStop, shape=funcSine, Amplitude=1, v_Offset=0, HzTime=5):
     
-    #Open device
-    print("Opening first device...")
-    dwf.FDwfDeviceOpen(c_int(-1), byref(hdwf))
+    secSweep = (HzStop-HzStart)/HzTime
     
-    if HzStep == 0:
-        Freq = 
     
+    dwf.FDwfAnalogOutNodeEnableSet(hdwf, channel, AnalogOutNodeCarrier, c_int(1))
+    dwf.FDwfAnalogOutNodeFunctionSet(hdwf, channel, AnalogOutNodeCarrier, shape)
+    dwf.FDwfAnalogOutNodeFrequencySet(hdwf, channel, AnalogOutNodeCarrier, c_double(HzStop))
+    dwf.FDwfAnalogOutNodeAmplitudeSet(hdwf, channel, AnalogOutNodeCarrier, c_double(Amplitude))
+    dwf.FDwfAnalogOutNodeOffsetSet(hdwf, channel, AnalogOutNodeCarrier, c_double(v_Offset))
+
+    dwf.FDwfAnalogOutRunSet(hdwf, channel, c_double(secSweep)) # Determines for how long it stays at each frequency in seconds
+    dwf.FDwfAnalogOutRepeatSet(hdwf, channel, c_int(1)) #Sets the repeat count
     
     return
