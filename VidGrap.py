@@ -32,7 +32,7 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 fourcc = cv2.VideoWriter_fourcc('M','J','P','G') #Defines output format, mp4
-out = cv2.VideoCapture('Algae_Vid.mp4', fourcc, 18.0, size)
+out = cv2.VideoWriter('Algae_Vid.mp4', fourcc, 18.0, size)
 
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
