@@ -45,11 +45,7 @@ while camera.IsGrabbing():
         k = cv2.waitKey(1)
         
         if k == ord('r'): # press down r to record
-            record = True
-            if record:    
-                out.write(img, gray)
-                time.sleep(10)
-                record = not record
+            out.write(img, gray)
         elif k == ord('f'): # press f
             funcGen()
         elif k == ord('F'): # press F
