@@ -46,15 +46,16 @@ while camera.IsGrabbing():
         
         k = cv2.waitKey(1)
         
-        if k == ord('r'): # press down r to record
-            V_Time = 10 #Seconds - how long to record for
-            Frames = V_Time*FPS #How many frames does the recording time correspond to 
-            record = 0
-        if (record >= 0) and (record < Frames):
-            out.write(img)
-            record += 1 
-            
         
+        if k == ord('r'): # press down r to record
+            record = True
+        elif k == ord('s'): #Stop recording
+            record = False    
+        
+        if record:
+            out.write(img)
+             
+            
         elif k == ord('f'): # press f
             funcGen()
         elif k == ord('F'): # press F
@@ -71,6 +72,6 @@ while camera.IsGrabbing():
 
     
 # Releasing the resource   
-out.Release() 
+out.release() 
 camera.StopGrabbing()
 
