@@ -34,6 +34,7 @@ out = cv2.VideoWriter('Algae_Vid.mp4', fourcc, FPS, size) #Change path to saved 
 
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+    record = -1
     
     if grabResult.GrabSucceeded():
         # Access the image data
@@ -45,7 +46,14 @@ while camera.IsGrabbing():
         k = cv2.waitKey(1)
         
         if k == ord('r'): # press down r to record
+            V_Time = 10 #Seconds - how long to record for
+            Frames = V_Time*FPS #How many frames does the recording time correspond to 
+            record = 0
+        if (record >= 0) and (record < Frames):
             out.write(img)
+            record += 1 
+            
+        
         elif k == ord('f'): # press f
             funcGen()
         elif k == ord('F'): # press F
@@ -56,6 +64,7 @@ while camera.IsGrabbing():
         if k == 27: # press ESC
             cv2.destroyAllWindows()
             break
+
 
     grabResult.Release()
 
