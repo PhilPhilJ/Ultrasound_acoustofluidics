@@ -40,6 +40,7 @@ while camera.IsGrabbing():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
         
