@@ -14,24 +14,16 @@ import numpy as np
 ###############################################################################
 ### Move to position
 
-CheckHomeX()
-if homed == False:
-    HomeX()
-
-CheckHomeY()
-if homed == False:
-    HomeY()
-
-CheckHomeX()
-if homed == False:
-    HomeY()
+#HomeX()
+#HomeY()
+#HomeZ()
 
 print("The device is homed in all directions")
 
 ### Input the starting position. Make sure the device hs not been moved since
 ### last use.
 
-coordinate =  [x , y, z]
+coordinate =  [30, 20, 5]
 
 MoveRelX(coordinate[0])
 MoveRelY(coordinate[1])
