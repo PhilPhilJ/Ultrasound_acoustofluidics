@@ -11,6 +11,8 @@ Created on Mon Aug 21 10:55:36 2023
 from pypylon import pylon
 import serial, time
 import cv2
+import sys
+sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
 from AD_func import *
 
 print('Press ESC to close the window')
@@ -30,7 +32,10 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 18 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter('Algae_Vid.mp4', fourcc, FPS, size) #Change path to saved location
+out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_5.mp4', fourcc, FPS, size) #Change path to saved location
+
+#Connect to analog discovery
+Connect()
 
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -49,22 +54,25 @@ while camera.IsGrabbing():
         
         if k == ord('r'): # press down r to record
             record = True
+            print('Starting recording..')
         elif k == ord('s'): #Stop recording
             record = False    
+            print('Stopping recording..')
         
         if record:
             out.write(img)
              
             
-        elif k == ord('f'): # press f
+        if k == ord('f'): # press f
             funcGen()
-        elif k == ord('F'): # press F
+        if k == ord('p'): # press F
             funcGen(freq=3.82)
-        elif k == ord('g'): # press g
+        if k == ord('g'): # press g
             funcStop()
 # Close experiment
         if k == 27: # press ESC
             cv2.destroyAllWindows()
+            disconnect()
             break
 
 
