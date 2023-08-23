@@ -153,3 +153,37 @@ def home():
             lib.SCC_WaitForMessage(serialNumber, byref(messageType), byref(messageID), byref(messageData))
     
         print("Homed!")
+
+def CheckHome():
+    
+    if sys.version_info < (3, 8):
+        os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
+    else:
+        os.add_dll_directory(r"C:\Program Files\Thorlabs\Kinesis")
+    lib = cdll.LoadLibrary("Thorlabs.MotionControl.KCube.StepperMotor.dll")
+
+    lib.TLI_InitializeSimulations()
+
+    lib.TLI_BuildDeviceList()
+    serialNumber = c_char_p(b"27258278")
+
+    lib.SCC_Open(serialNumber)
+    lib.SCC_StartPolling(serialNumber, c_int(100))
+    lib.SCC_EnableChannel(serialNumber)
+    time.sleep(1)
+    lib.SCC_ClearMessageQueue(serialNumber)
+    lib.SCC_LoadSettings(serialNumber)
+    time.sleep(0.5)
+    position = lib.SCC_GetPositionCounter(serialNumber)
+    if position == 0:
+        homed = True
+    else:
+        homed = False
+
+    lib.SCC_ClearMessageQueue(serialNumber)
+    lib.SCC_StopPolling(serialNumber)
+    lib.SCC_Close(serialNumber)
+    
+    lib.TLI_UninitializeSimulations()
+    
+    return homed
