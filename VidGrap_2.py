@@ -32,7 +32,7 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 18 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_5.mp4', fourcc, FPS, size) #Change path to saved location
+out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, FPS, size) #Change path to saved location
 
 #Connect to analog discovery
 Connect()
@@ -45,10 +45,9 @@ while camera.IsGrabbing():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
-        
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         k = cv2.waitKey(1)
         
         
