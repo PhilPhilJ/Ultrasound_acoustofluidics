@@ -9,7 +9,20 @@ Created on Thu Aug 24 14:11:47 2023
 # Code for converting BGR to grayscale according to https://stackoverflow.com/questions/17615963/standard-rgb-to-grayscale-conversion and https://en.wikipedia.org/wiki/Grayscale
         
 def grayConvert(image):
+    """
     
+
+    Parameters
+    ----------
+    image : Array
+        Takes an input the form of an array with the BGR color format which OpenCV uses.
+
+    Returns
+    -------
+    img : Array
+        Image array with single channel grayscale
+
+    """
     b,g,r = image[:,:,0]/255, image[:,:,1]/255, image[:,:,2]/255
     b_const, g_const, r_const = 0.0722, 0.7152, 0.2126
     
