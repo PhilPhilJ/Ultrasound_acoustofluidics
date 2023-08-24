@@ -14,6 +14,7 @@ import cv2
 import sys
 sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
 from AD_func import *
+from GrayScale_Conversion import *
 
 print('Press ESC to close the window')
 
@@ -45,9 +46,9 @@ while camera.IsGrabbing():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+        img = grayConvert(img) #Converts the image into a grayscale
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         k = cv2.waitKey(1)
         
         
