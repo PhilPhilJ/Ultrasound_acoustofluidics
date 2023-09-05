@@ -40,9 +40,9 @@ def frameCut(frame):
         frame = frame[index_left_side: index_right_side]
         frame_1d = frame_1d[index_left_side: index_right_side]
         
-        ave_frame_cut = np.round(np.tile(frame_1d, (len(frame_1d),1)))/255 #Cut frame avereaged along y-driection
+        #ave_frame_cut = np.round(np.tile(frame_1d, (len(frame_1d),1)))/255 #Cut frame avereaged along y-driection
     else:
         print('Error! Could not detect the channel edges')
     
-    return index_left_side, index_right_side, ave_frame_cut
+    return index_left_side, index_right_side#, ave_frame_cut
      

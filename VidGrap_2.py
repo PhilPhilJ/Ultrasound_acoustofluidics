@@ -14,6 +14,7 @@ import cv2
 import sys
 sys.path.append('C:/Users/s102772/Desktop/Ultrasound_acoustofluidics/')
 from AD_func import *
+from frameCut import *
 import numpy as np
 
 print('Press ESC to close the window')
@@ -48,6 +49,8 @@ while camera.IsGrabbing():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+        if t==42:
+            img = img[:,IL:IR]
         cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
@@ -68,60 +71,20 @@ while camera.IsGrabbing():
             funcStop()
             
 ################################### Deletes unwanted data
-        #average the video along y-dricetion so that we get an 1D array/vector
-        frame_1d = np.array(np.mean(img, axis=0))
-        
-        if t == 1:
-            grad = abs(np.diff(frame_1d))
-            
-            grad[grad<=0.5] = 0
-            grad[grad>0.5] = 1
-            
-            plt.plot(np.arange(0,len(frame_1d)-2), grad[0:4502])
-            
-            img_mid = int(np.round(len(grad)/2)) #Midpoint of the image
-            
-            index_left_side = np.array([])
-            index_right_side = np.array([])
-            
-            for (i,j) in enumerate(np.diff(grad[0:img_mid])):
-                if j < 0:
-                    index_left_side = np.append(index_left_side,[i])
-                    
-            for (i,j) in enumerate(np.diff(grad)):
-                if (j > 0) and (i >= img_mid):
-                    index_right_side = np.append(index_right_side,[i])
-            
-            index_left_side = int(np.max(index_left_side))
-            index_right_side = int(np.min(index_right_side))
-            
-        frame = frame[index_left_side: index_right_side]
-        frame_1d = frame_1d[index_left_side: index_right_side]
-            
-        ave_frame_cut = np.round(np.tile(frame_1d, (len(frame_1d),1)))/255 #Cut frame avereaged along y-driection
-            
-        cv2.namedWindow("Frame - Area of interest", cv2.WINDOW_NORMAL)
-        cv2.imshow("Frame - Area of interest", ave_frame_cut)     
-
+        if t == 5:
+            IL,IR = frameCut(img)
+        if t<6:
+            t+=1
+        elif t!=42:
+            t=42
 ###########################################         
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+                     
 # Close experiment
         if k == 27: # press ESC
             cv2.destroyAllWindows()
             disconnect()
             break
 
-    t+=1
     grabResult.Release()
 
     
