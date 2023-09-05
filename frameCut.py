@@ -12,13 +12,13 @@ from matplotlib import pyplot as plt
 
 
 
-def frameCut(frame):
+def frameCut(frame, threshold=0.25):
     #average the video along y-dricetion so that we get an 1D array/vector
     frame_1d = np.array(np.mean(frame, axis=0))
     grad = abs(np.diff(frame_1d))
     
-    grad[grad<=0.5] = 0
-    grad[grad>0.5] = 1
+    grad[grad<=threshold] = 0
+    grad[grad>threshold] = 1
     
     img_mid = int(np.round(len(grad)/2)) #Midpoint of the image
     
