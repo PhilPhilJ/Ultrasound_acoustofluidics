@@ -39,7 +39,6 @@ def Connect():
     # Checks if the system is windows (win) or Mac os (darwin) and then find path to dwf: /Library/Frameworks/dwf.framework/dwf
     if sys.platform.startswith("win"):
         dwf = cdll.dwf
-        print(1)
     elif sys.platform.startswith("darwin"): 
         dwf = cdll.LoadLibrary("/Applications/WaveForms.app/Contents/Frameworks/dwf.framework/dwf")
 
