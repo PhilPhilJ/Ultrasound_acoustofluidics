@@ -6,12 +6,6 @@ Created on Wed Aug 23 10:41:26 2023
 """
 
 
-from pypylon import pylon
-import cv2
-import sys
-sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
-from AD_func import *
-import time
 
 ###############################################################################
 ### For controlling lab setup.
@@ -23,6 +17,7 @@ import cv2
 import sys
 sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
 from AD_func import *
+import time
 
 ###############################################################################
 ### Move to position
@@ -30,11 +25,9 @@ from AD_func import *
 ## Set homed
 Homed = False
 
-if homed == True:
+if Homed == True:
 
-    HomeX()
-    HomeY()
-    HomeZ()
+    HomeAll()
 
 print("The device is homed in all directions")
 
@@ -42,6 +35,17 @@ print("The device is homed in all directions")
 ### last use.
 
 coordinate =  [30, 20, 5]
+
+print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to:")
+print(coordinate)
+user_input = input('Would you like to continue (y/n)')
+
+if user_input.lower() == 'y':
+    print('user typed "y" and the program will continue')
+elif user_input.lower() == 'n':
+    sys.exit('user typed "n" and the program will terminate now')
+else:
+    print('Type "y" or "n"')
 
 MoveRelX(coordinate[0])
 MoveRelY(coordinate[1])
@@ -95,37 +99,51 @@ while camera.IsGrabbing():
     
     ## Determining the length of the tube
     
-    img_mean_x = np.mean(img, axis = 1)
-    difference_x = img_mean_x[0] - img_mean_x[-1]
-    
-    if difference_x > 0:
-        MoveAbsZ(2)
+    done = False
+    while done == False:
+        img_mean_y = np.mean(img, axis = 1)
+        gradient_y = abs(np.diff(img_mean_y))
         
-    if difference_x < 0:   
-        
-        end_z = PositionZ()
-        tube_length = abs(start_coordinate[2] - end_z)
-        initialize_analysis = True
+        if np.max(gradient_y) > 0.5:
+            MoveAbsZ(2)
+            
+        else:   
+            bottom_z = PositionZ()
+            done = True
     
+    done = False
+    while done == False:
+        img_mean_y = np.mean(img, axis = 1)
+        gradient_y = abs(np.diff(img_mean_y))
+        
+        if np.max(gradient_y) < 0.5:
+            MoveAbsZ(2)
+            
+        else:   
+            top_z = PositionZ()
+            done = True
+    
+    tube_length = top_z - bottom_z
+    runs = 10
+    
+    
+    initialize_analysis = True    
     if initialize_analysis == True:
         
-        if firsttime == True:
+        MoveAbsX(-1)
+        MoveAbsZ(-1)
+        MoveAbsZ(bottom_z)
+        MoveAbsX(start_coordinate[0])
+        
+        for run in range(runs):
+            funcGen()
+            time.sleep(5)
+            funcStop()
             
-            MoveRelZ(-1)
-            HomeZ()
-            MoveRelZ(start_coordinate[2])
-            firsttime = False
+            MoveRelZ(tube_length / runs)
         
-        MoveAbsZ(3)
-        funcGen()
         
-        while time.time() < t_end:
-            out.write(img)
-        
-        funcStop()
-        current_position = PositionX()
-        
-    if current_position > end_z:
+    if current_position >= top_z:
         
         cv2.destroyAllWindows()
         disconnect()
@@ -145,22 +163,5 @@ camera.StopGrabbing()
 ### Check the tilt of the device
 
 ## Initialize camara
-
-
- ## Something camara / focus
- end_coordinate = [PositionX(), PositionY(), PositionZ()]
-
- # Calculating the angle tilt
- tilt = end_coordinate[2] - start_coordinate[2] / end_coordinate[1] - start_coordinate[1]
- angle = np.arctan(tilt)
-
- print("The tilt angle is " +str(angle))
-
- # Move to start
-
- MoveAbsX(start_coordinate[0], start_coordinate[1], start_coordinate[2])
-
- print("The tilt check is done and the device is back in starting position")
-###############################################################################
 
 

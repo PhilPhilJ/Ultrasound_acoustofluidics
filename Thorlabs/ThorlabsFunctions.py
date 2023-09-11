@@ -707,3 +707,57 @@ def CheckHomeZ():
     lib.TLI_UninitializeSimulations()
     
     return homed
+
+###############################################################################
+### Functions for all directions
+
+def HomeAll():
+    """
+    Simply homes Thorlabs. No input.
+
+    Returns
+    -------
+    None.
+
+    """
+    if sys.version_info < (3, 8):
+        os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
+    else:
+        os.add_dll_directory(r"C:\Program Files\Thorlabs\Kinesis")
+    lib = cdll.LoadLibrary("Thorlabs.MotionControl.KCube.StepperMotor.dll")
+
+    lib.TLI_InitializeSimulations()
+
+    lib.TLI_BuildDeviceList()
+    serialNumberX = c_char_p(b"27258278")
+    serialNumberY = c_char_p(b"27259679")
+    serialNumberZ = c_char_p(b"27259728")
+
+    lib.SCC_Open(serialNumberX)
+    lib.SCC_Open(serialNumberY)
+    lib.SCC_Open(serialNumberZ)
+    lib.SCC_StartPolling(serialNumberX, c_int(100))
+    lib.SCC_StartPolling(serialNumberY, c_int(100))
+    lib.SCC_StartPolling(serialNumberZ, c_int(100))
+    lib.SCC_EnableChannel(serialNumberX)
+    lib.SCC_EnableChannel(serialNumberY)
+    lib.SCC_EnableChannel(serialNumberZ)
+    time.sleep(1)
+    lib.SCC_ClearMessageQueue(serialNumberX)
+    lib.SCC_ClearMessageQueue(serialNumberY)
+    lib.SCC_ClearMessageQueue(serialNumberZ)
+    
+    homed = False
+    if homed == False:
+        print("Homing Device...")
+        homeStartTime = time.time()
+        lib.SCC_Home(serialNumberX)
+        lib.SCC_Home(serialNumberY)
+        lib.SCC_Home(serialNumberZ)
+        messageType = c_ushort()
+        messageID = c_ushort()
+        messageData = c_ulong()
+        while messageID.value != 0 or messageType.value != 2:
+            lib.SCC_WaitForMessage(serialNumber, byref(messageType), byref(messageID), byref(messageData))
+    
+        print("Homed!")
