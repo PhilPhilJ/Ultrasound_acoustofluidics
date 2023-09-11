@@ -758,6 +758,10 @@ def HomeAll():
         messageID = c_ushort()
         messageData = c_ulong()
         while messageID.value != 0 or messageType.value != 2:
-            lib.SCC_WaitForMessage(serialNumber, byref(messageType), byref(messageID), byref(messageData))
+            lib.SCC_WaitForMessage(serialNumberX, byref(messageType), byref(messageID), byref(messageData))
+        while messageID.value != 0 or messageType.value != 2:
+            lib.SCC_WaitForMessage(serialNumberY, byref(messageType), byref(messageID), byref(messageData))
+        while messageID.value != 0 or messageType.value != 2:
+            lib.SCC_WaitForMessage(serialNumberZ, byref(messageType), byref(messageID), byref(messageData))
     
         print("Homed!")

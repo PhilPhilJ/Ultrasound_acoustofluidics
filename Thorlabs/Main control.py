@@ -16,7 +16,6 @@ from pypylon import pylon
 import cv2
 import sys
 sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
-from AD_func import *
 import time
 
 ###############################################################################
@@ -25,16 +24,21 @@ import time
 ## Set homed
 Homed = False
 
-if Homed == True:
-
-    HomeAll()
+if Homed == False:
+    print("Homing...")
+    MoveAbsX(-1)
+    MoveAbsY(-1)
+    MoveAbsZ(-1)
+    HomeX()
+    HomeY()
+    HomeZ()
 
 print("The device is homed in all directions")
 
 ### Input the starting position. Make sure the device hs not been moved since
 ### last use.
 
-coordinate =  [30, 20, 5]
+coordinate =  [26.73, 25.53800, 15.5911]
 
 print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to:")
 print(coordinate)
