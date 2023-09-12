@@ -10,14 +10,16 @@ Created on Wed Aug 23 10:41:26 2023
 ###############################################################################
 ### For controlling lab setup.
 
-from ThorlabsFunctions import *
 import numpy as np
 from pypylon import pylon
 import cv2
 import sys
-sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
+sys.path.append(r'C:\Users\s102772\Desktop\Ultrasound_acoustofluidics\Thorlabs')
+from ThorlabsFunctions import *
 import time
+from AD_func import *
 
+#%%
 ###############################################################################
 ### Move to position
 
@@ -26,19 +28,18 @@ Homed = False
 
 if Homed == False:
     print("Homing...")
-    MoveAbsX(-1)
-    MoveAbsY(-1)
-    MoveAbsZ(-1)
+    #MoveAbsX(-1)
+    #MoveAbsY(-1)
+    #MoveAbsZ(-1)
     HomeX()
-    HomeY()
-    HomeZ()
+    HomeAll()
 
 print("The device is homed in all directions")
 
 ### Input the starting position. Make sure the device hs not been moved since
 ### last use.
 
-coordinate =  [26.73, 25.53800, 15.5911]
+coordinate =  [27.38953, 25.43504, 16.31942]
 
 print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to:")
 print(coordinate)
@@ -51,14 +52,15 @@ elif user_input.lower() == 'n':
 else:
     print('Type "y" or "n"')
 
-MoveRelX(coordinate[0])
 MoveRelY(coordinate[1])
 MoveRelZ(coordinate[2])
+MoveRelX(coordinate[0])
 
 start_coordinate = [PositionX(), PositionY(), PositionZ()]
 
 print("The device is now in the starting position")
 
+#%%
 ###############################################################################
 ### Doing analysis of capillary tube
 
@@ -78,12 +80,12 @@ converter = pylon.ImageFormatConverter()
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
-fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, 18, size) #Change path to saved location
+#size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
+#fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
+#out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, 18, size) #Change path to saved location
 
 #Connect to analog discovery
-Connect()
+#Connect()
 
 initialize_analysis = False
 firsttime = True
@@ -103,29 +105,27 @@ while camera.IsGrabbing():
     
     ## Determining the length of the tube
     
-    done = False
-    while done == False:
-        img_mean_y = np.mean(img, axis = 1)
-        gradient_y = abs(np.diff(img_mean_y))
-        
-        if np.max(gradient_y) > 0.5:
-            MoveAbsZ(2)
-            
-        else:   
-            bottom_z = PositionZ()
-            done = True
     
-    done = False
-    while done == False:
-        img_mean_y = np.mean(img, axis = 1)
-        gradient_y = abs(np.diff(img_mean_y))
+    img_mean_y = np.mean(img, axis = 1)
+    gradient_y = abs(np.diff(img_mean_y))
+    
+    if np.max(gradient_y) > 0.5:
+        MoveAbsZ(0.1)
         
-        if np.max(gradient_y) < 0.5:
-            MoveAbsZ(2)
-            
-        else:   
-            top_z = PositionZ()
-            done = True
+    else:   
+        bottom_z = PositionZ()
+        done = True
+    
+    
+    img_mean_y = np.mean(img, axis = 1)
+    gradient_y = abs(np.diff(img_mean_y))
+    
+    if np.max(gradient_y) < 0.5:
+        MoveAbsZ(0.1)
+        
+    else:   
+        top_z = PositionZ()
+        done = True
     
     tube_length = top_z - bottom_z
     runs = 10
@@ -161,7 +161,7 @@ while camera.IsGrabbing():
 out.release() 
 camera.StopGrabbing()
 
-
+#%%
 ###############################################################################
 ###############################################################################
 ### Check the tilt of the device

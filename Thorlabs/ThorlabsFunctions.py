@@ -58,7 +58,7 @@ def MoveRelX(distance=1):
 
     """
     scale_fc = 34304
-    distance_mm = distance * scale_fc
+    distance_mm = round(distance * scale_fc)
     
     if sys.version_info < (3, 8):
         os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
@@ -116,7 +116,7 @@ def MoveAbsX(position = 1):
     """
     
     scale_fc = 34304
-    position_mm = position * scale_fc
+    position_mm = round(position * scale_fc)
     
     if sys.version_info < (3, 8):
         os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
@@ -291,7 +291,7 @@ def MoveRelY(distance=1):
 
     """
     scale_fc = 34304
-    distance_mm = distance * scale_fc
+    distance_mm = round(distance * scale_fc)
     
     if sys.version_info < (3, 8):
         os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
@@ -349,7 +349,7 @@ def MoveAbsY(position = 1):
     """
     
     scale_fc = 34304
-    position_mm = position * scale_fc
+    position_mm = round(position * scale_fc)
     
     if sys.version_info < (3, 8):
         os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
@@ -523,7 +523,7 @@ def MoveRelZ(distance=1):
 
     """
     scale_fc = 34304
-    distance_mm = distance * scale_fc
+    distance_mm = round(distance * scale_fc)
     
     if sys.version_info < (3, 8):
         os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
@@ -581,7 +581,7 @@ def MoveAbsZ(position = 1):
     """
     
     scale_fc = 34304
-    position_mm = position * scale_fc
+    position_mm = round(position * scale_fc)
     
     if sys.version_info < (3, 8):
         os.chdir(r"C:\Program Files\Thorlabs\Kinesis")
