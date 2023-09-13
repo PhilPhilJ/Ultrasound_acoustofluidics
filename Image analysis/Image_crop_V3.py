@@ -19,8 +19,6 @@ vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Vid_For_Analysis.mp4') #Loads 
 #Reads the fist frame
 ret, frame = vid.read()
 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Converts the frame to grayscale
-
-#average the video along y-dricetion so that we get an 1D array/vector
 frame_length = np.size(frame, axis=0)
 
 ####################################### Plotting intensities overlayed image of channel #######################################
@@ -77,6 +75,5 @@ def assign_max(event): #A function that assigns the threshold value given by the
 button_min.on_clicked(assign_min)
 button_max.on_clicked(assign_max)
 
-#fig.tight_layout()
 plt.show()
 
