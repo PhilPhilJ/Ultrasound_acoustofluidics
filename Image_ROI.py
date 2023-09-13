@@ -54,18 +54,16 @@ ave_frame_cut = np.round(np.tile(frame_1d, (len(frame_1d),1)))/255 #Cut frame av
 cv2.namedWindow("Frame - Area of interest", cv2.WINDOW_NORMAL)
 cv2.imshow("Frame - Area of interest", ave_frame_cut)     
 
-# =============================================================================
-# 
-# fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-# out = cv2.VideoWriter('/Users/joakimpihl/Desktop/TestVid.mp4', fourcc, 18, (index_right_side-index_left_side, 4054)) #Change path to saved location
-# 
-# while True:
-#     #Reads the fist frame
-#     ret, frame = vid.read()
-#     frame = frame[:,index_left_side: index_right_side]
-#     frame_1d = frame_1d[index_left_side: index_right_side]
-# 
-#     ave_frame_cut = np.round(np.tile(frame_1d, (len(frame_1d),1)))/255 #Cut frame avereaged along y-driection
-#     out.write(ave_frame_cut)
-#    
-# =============================================================================
+
+fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
+out = cv2.VideoWriter('/Users/joakimpihl/Desktop/TestVid.mp4', fourcc, 18, (index_right_side-index_left_side, 4054)) #Change path to saved location
+
+while True:
+    #Reads the fist frame
+    ret, frame = vid.read()
+    frame = frame[:,index_left_side: index_right_side]
+    frame_1d = frame_1d[index_left_side: index_right_side]
+
+    ave_frame_cut = np.round(np.tile(frame_1d, (len(frame_1d),1)))/255 #Cut frame avereaged along y-driection
+    out.write(ave_frame_cut)
+   
