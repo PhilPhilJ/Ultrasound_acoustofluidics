@@ -803,3 +803,7 @@ def HomeAll():
             lib.SCC_WaitForMessage(serialNumberZ, byref(messageType), byref(messageID), byref(messageData))
     
         print("Homed!")
+        
+        return
+
+
