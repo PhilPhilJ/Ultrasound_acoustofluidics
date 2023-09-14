@@ -32,7 +32,7 @@ def PositionX():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     position = lib.SCC_GetPositionCounter(serialNumber)
     position = position / scale_fc 
@@ -78,16 +78,23 @@ def MoveRelX(distance=1):
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     
     lib.SCC_SetMotorParamsExt(serialNumber, c_double(stepsPerRev), c_double(gearBoxRatio), c_double(pitch))
     lib.SCC_LoadSettings(serialNumber)
 
-    time.sleep(0.5)
+    time.sleep(0.1)
     lib.SCC_MoveRelative(serialNumber, distance_mm)
     print("Moving...")
-    time.sleep(abs(distance) + 1)
+    
+    moving = True
+    while moving == True:
+        first = PositionX()
+        second = PositionX()
+        if first == second:
+            moving = False
+    
     position = lib.SCC_GetPositionCounter(serialNumber)
     print("Thorlabs moved " + str(distance) + "mm in the x direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
     
@@ -136,7 +143,7 @@ def MoveAbsX(position = 1):
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
 
     lib.SCC_SetMotorParamsExt(serialNumber, c_double(stepsPerRev), c_double(gearBoxRatio), c_double(pitch))
@@ -144,11 +151,16 @@ def MoveAbsX(position = 1):
 
     lib.SCC_SetMoveAbsolutePosition(serialNumber, c_int(position_mm))
     current_position = lib.SCC_GetPositionCounter(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_MoveAbsolute(serialNumber)
     print("Moving...")
     
-    time.sleep(abs(position - current_position//scale_fc) + 1)
+    moving = True
+    while moving == True:
+        first = PositionX()
+        second = PositionX()
+        if first == second:
+            moving = False
     
     current_position = lib.SCC_GetPositionCounter(serialNumber)
     print("Thorlabs moved to " + str(round(current_position/scale_fc , 2)) + "mm")
@@ -265,7 +277,7 @@ def PositionY():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.04)
     lib.SCC_ClearMessageQueue(serialNumber)
     position = lib.SCC_GetPositionCounter(serialNumber)
     position = position / scale_fc 
@@ -317,10 +329,17 @@ def MoveRelY(distance=1):
     lib.SCC_SetMotorParamsExt(serialNumber, c_double(stepsPerRev), c_double(gearBoxRatio), c_double(pitch))
     lib.SCC_LoadSettings(serialNumber)
 
-    time.sleep(0.5)
+    time.sleep(0.1)
     lib.SCC_MoveRelative(serialNumber, distance_mm)
     print("Moving...")
-    time.sleep(abs(distance) + 1)
+    
+    moving = True
+    while moving == True:
+        first = PositionY()
+        second = PositionY()
+        if first == second:
+            moving = False
+
     position = lib.SCC_GetPositionCounter(serialNumber)
     print("Thorlabs moved " + str(distance) + "mm in the x direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
     
@@ -330,6 +349,8 @@ def MoveRelY(distance=1):
     
     return
 
+
+        
 def MoveAbsY(position = 1):
     """
     input the position in mm you want to move Thorlabs to.
@@ -369,7 +390,7 @@ def MoveAbsY(position = 1):
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
 
     lib.SCC_SetMotorParamsExt(serialNumber, c_double(stepsPerRev), c_double(gearBoxRatio), c_double(pitch))
@@ -377,11 +398,16 @@ def MoveAbsY(position = 1):
 
     lib.SCC_SetMoveAbsolutePosition(serialNumber, c_int(position_mm))
     current_position = lib.SCC_GetPositionCounter(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_MoveAbsolute(serialNumber)
     print("Moving...")
     
-    time.sleep(abs(position - current_position//scale_fc) + 1)
+    moving = True
+    while moving == True:
+        first = PositionY()
+        second = PositionY()
+        if first == second:
+            moving = False
     
     current_position = lib.SCC_GetPositionCounter(serialNumber)
     print("Thorlabs moved to " + str(round(current_position/scale_fc , 2)) + "mm")
@@ -415,7 +441,7 @@ def HomeY():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     
     homed = False
@@ -458,10 +484,10 @@ def CheckHomeY():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     lib.SCC_LoadSettings(serialNumber)
-    time.sleep(0.5)
+    time.sleep(0.1)
     position = lib.SCC_GetPositionCounter(serialNumber)
     if position == 0:
         homed = True
@@ -497,7 +523,7 @@ def PositionZ():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     position = lib.SCC_GetPositionCounter(serialNumber)
     position = position / scale_fc 
@@ -543,16 +569,23 @@ def MoveRelZ(distance=1):
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     
     lib.SCC_SetMotorParamsExt(serialNumber, c_double(stepsPerRev), c_double(gearBoxRatio), c_double(pitch))
     lib.SCC_LoadSettings(serialNumber)
 
-    time.sleep(0.5)
+    time.sleep(0.1)
     lib.SCC_MoveRelative(serialNumber, distance_mm)
     print("Moving...")
-    time.sleep(abs(distance) + 1)
+    
+    moving = True
+    while moving == True:
+        first = PositionZ()
+        second = PositionZ()
+        if first == second:
+            moving = False
+    
     position = lib.SCC_GetPositionCounter(serialNumber)
     print("Thorlabs moved " + str(distance) + "mm in the x direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
     
@@ -601,7 +634,7 @@ def MoveAbsZ(position = 1):
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
 
     lib.SCC_SetMotorParamsExt(serialNumber, c_double(stepsPerRev), c_double(gearBoxRatio), c_double(pitch))
@@ -609,11 +642,16 @@ def MoveAbsZ(position = 1):
 
     lib.SCC_SetMoveAbsolutePosition(serialNumber, c_int(position_mm))
     current_position = lib.SCC_GetPositionCounter(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_MoveAbsolute(serialNumber)
     print("Moving...")
     
-    time.sleep(abs(position - current_position//scale_fc) + 1)
+    moving = True
+    while moving == True:
+        first = PositionZ()
+        second = PositionZ()
+        if first == second:
+            moving = False
     
     current_position = lib.SCC_GetPositionCounter(serialNumber)
     print("Thorlabs moved to " + str(round(current_position/scale_fc , 2)) + "mm")
@@ -647,7 +685,7 @@ def HomeZ():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     
     homed = False
@@ -690,10 +728,10 @@ def CheckHomeZ():
     lib.SCC_Open(serialNumber)
     lib.SCC_StartPolling(serialNumber, c_int(100))
     lib.SCC_EnableChannel(serialNumber)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumber)
     lib.SCC_LoadSettings(serialNumber)
-    time.sleep(0.5)
+    time.sleep(0.1)
     position = lib.SCC_GetPositionCounter(serialNumber)
     if position == 0:
         homed = True
@@ -742,7 +780,7 @@ def HomeAll():
     lib.SCC_EnableChannel(serialNumberX)
     lib.SCC_EnableChannel(serialNumberY)
     lib.SCC_EnableChannel(serialNumberZ)
-    time.sleep(1)
+    time.sleep(0.1)
     lib.SCC_ClearMessageQueue(serialNumberX)
     lib.SCC_ClearMessageQueue(serialNumberY)
     lib.SCC_ClearMessageQueue(serialNumberZ)
