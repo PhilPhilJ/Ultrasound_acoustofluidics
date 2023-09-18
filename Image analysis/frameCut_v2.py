@@ -13,35 +13,41 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider, Button
 
 def frameCut(frame):
+    global index_left_side
+    global index_right_side
     
     ######################################## Functions start ########################################
     # The function to be called anytime a slider's value changes
     def update(val):
-        global slider_val
+        print(val)
         slider_val = val
         vert_line.set_xdata(val)
         fig.canvas.draw_idle()
-    
+        
     def assign_min(event): #A function that assigns the threshold value given by the slider
         global index_left_side
         global px_per_mm
-        index_left_side = globals()['slider_val']
+        globals()['index_left_side'] = globals()['slider_val']
         print('The left boundary has been set at: ' + str(round(index_left_side,0)))
-        if 'index_right_side' in globals():
-            px_per_mm = (index_right_side-index_left_side)/0.4 #px/mm
-            print('For the view there is ' + str(round(px_per_mm,2)) + ' px/mm')
-            plt.close(fig)
-
+# =============================================================================
+#         if 'index_right_side' in globals():
+#             px_per_mm = (index_right_side-index_left_side)/0.4 #px/mm
+#             print('For the view there is ' + str(round(px_per_mm,2)) + ' px/mm')
+#             plt.close(fig)
+# 
+# =============================================================================
     def assign_max(event): #A function that assigns the threshold value given by the slider
-        global index_right_side
+
         global px_per_mm
-        index_right_side = globals()['slider_val']
+        globals()['index_right_side'] = globals()['slider_val']
         print('The right boundary has been set at: ' + str(round(index_right_side,0)))
-        if 'index_left_side' in globals():
-            px_per_mm = (index_right_side-index_left_side)/0.4 #px/mm
-            print('For the view there is ' + str(round(px_per_mm,2)) + ' px/mm')
-            plt.close(fig)
-    
+# =============================================================================
+#         if 'index_left_side' in globals():
+#             px_per_mm = (index_right_side-index_left_side)/0.4 #px/mm
+#             print('For the view there is ' + str(round(px_per_mm,2)) + ' px/mm')
+#             plt.close(fig)
+#     
+# =============================================================================
     ######################################## Functions end ########################################
     funcStop = True
     frame_length = np.size(frame, axis=0)
@@ -64,17 +70,28 @@ def frameCut(frame):
     # Make a horizontal slider to control the line position.
     axpos = fig.add_axes([0.2, 0.01, 0.65, 0.03])
     pos_slider = Slider(ax=axpos, label='Position', valmin=0, valmax=frame_length, valinit=frame_length/2)
-
     # register the update function with each slider
-    pos_slider.on_changed(update)
+    #pos_slider.on_changed(update)
 
     # Create a `matplotlib.widgets.Button` to accept the slider value.
     min_val = fig.add_axes([0.0125, 0.05, 0.1, 0.04])
     max_val = fig.add_axes([0.875, 0.05, 0.1, 0.04])
     button_min = Button(min_val, 'Min', hovercolor='0.975')
     button_max = Button(max_val, 'Max', hovercolor='0.975')
-    button_min.on_clicked(assign_min)
-    button_max.on_clicked(assign_max)
+    #button_min.on_clicked(assign_min)
+    #button_max.on_clicked(assign_max)
+    
+    while not (('index_left_side' in globals()) and ('index_right_side' in globals())):
+        # register the update function with each slider
+        pos_slider.on_changed(update)
+
+        # Create a `matplotlib.widgets.Button` to accept the slider value.
+        button_min.on_clicked(assign_min)
+        button_max.on_clicked(assign_max)
+    
+
+            
+    plt.close(fig)
     
     return index_left_side, index_right_side, px_per_mm
      
@@ -90,3 +107,4 @@ frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Converts the frame to grayscale
 #%%
 
 frameCut(frame)
+plt.show()

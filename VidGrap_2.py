@@ -39,12 +39,13 @@ out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, FPS, s
 #Connect to analog discovery
 Connect()
 t = 1
+test = 0
 
-
+start = time.time()
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
     record = -1
-    
+    test += 1
     if grabResult.GrabSucceeded():
         # Access the image data
         image = converter.Convert(grabResult)
@@ -84,7 +85,11 @@ while camera.IsGrabbing():
             cv2.destroyAllWindows()
             disconnect()
             break
-
+        stop = time.time()
+        if (stop-start >= 10):
+            print('Delta_T: ' + str(stop-start))
+            print('expected loops = 10s * 18FPS = 180frames')
+            print('Loops: ' + str(test))
     grabResult.Release()
 
     
