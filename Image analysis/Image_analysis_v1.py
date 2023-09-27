@@ -16,7 +16,7 @@ vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Vid_For_Analysis.mp4') #Loads 
 
 
 while True:
-    #Reads the fist frame
+    #Reads the first frame
     ret, frame = vid.read()
     if ret != True:
         break
@@ -42,16 +42,15 @@ while True:
     no_diff = 0
     mm_px = 0.20010005002501252 # um/px
     dist = int(np.ceil(section_indeces[1:2]) - np.floor(np.mean(section_indeces[0:1]))) * mm_px
-    print(no_diff)
     
     if 'frame_mean_init' in globals():
         frame_diff = frame_mean_y-frame_mean_init
         frame_mean_init = frame_mean_y
-        
+
         diff_section = abs(np.mean(frame_diff[section_indeces[1]:section_indeces[2]]))
-                                                                                    
+        no_diff_f = vid.get(cv2._CAP_PROP_POS_FRAMES)                                                                      
         if (diff_section <= intensity_sd) and (no_diff < 1):
-            no_diff += 1
+            no_diff_i = vid.get(cv2._CAP_PROP_POS_FRAMES)
         elif (diff_section <= intensity_sd) and (no_diff >= 1):
             stop = time.time()
             focus_time = stop-start - no_diff/18
