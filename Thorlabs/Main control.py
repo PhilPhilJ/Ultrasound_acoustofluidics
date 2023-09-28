@@ -18,14 +18,14 @@ sys.path.append(r'C:\Users\s102772\Desktop\Ultrasound_acoustofluidics\Thorlabs')
 from ThorlabsFunctions import *
 import time
 from AD_func import *
-from freqSweep import *
+#from freqSweep import *
 
 #%%
 ###############################################################################
 ### Move to position
 
-## Set homed
-Homed = False
+## Change this to skib if already homed
+Homed = True
 
 if Homed == False:
     print("Homing...")
@@ -38,11 +38,11 @@ print("The device is homed in all directions")
 ### Input the starting position (bottom position of the tube) and top position. Make sure the device has not been moved since
 ### last use.
 
-coordinate_bottom =  [27.38953, 25.43504, 16.31942]
-coordinate_top =  [27.38953, 25.43504, 36.31942]
+coordinate_bottom =  [45.044275, 26.14545, 27.02866]
+coordinate_top =  [44.797575, 26.19676, 48.31306]
 
 tube_length = coordinate_top[2] - coordinate_bottom[2]
-print("coordinate_bottom is " + str(coordinate_bottom + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length)))
+print("coordinate_bottom is " + str(coordinate_bottom) + ", coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length))
 
 print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to: "+ str(coordinate_bottom))
 user_input = input('Would you like to continue (y/n)')
@@ -53,11 +53,15 @@ elif user_input.lower() == 'n':
     sys.exit('user typed "n" and the program will terminate now')
 else:
     print('Type "y" or "n"')
+    
+##Change this to skib if in starting position
+in_start_pos = True
 
-print("moving to starting position")
-MoveRelY(coordinate_bottom[1])
-MoveRelZ(coordinate_bottom[2])
-MoveRelX(coordinate_bottom[0])
+if in_start_pos == False:
+    print("moving to starting position")
+    MoveRelY(coordinate_bottom[1])
+    MoveRelZ(coordinate_bottom[2])
+    MoveRelX(coordinate_bottom[0])
 
 print("The device is now in the starting position")
 
@@ -86,8 +90,6 @@ volts = [1, 10, 20]
 #start and stop frequencies for sweep
 sweep = [3, 5]
 
-#Connect to analog discovery
-Connect()
 
 print("Characterization of tube is about to begin and will run for ")
 user_input = input('Would you like to continue (y/n)')
@@ -119,7 +121,7 @@ position = coordinate_bottom
 #path for file to be saved
 path = "C:/Users/s102772/Desktop/" + "P[" + str(position[0]) + "," + str(position[1]) + "," + str(position[2]) + "]F[" + str(frequency) + "]V[" + str(volts[0]) + "," + str(volts[1]) + "," + str(volts[2]) + "]S[" + str(sweep[0]) + "," + str(sweep[1]) + "].mp4"
 
-out = cv2.VideoWriter(path, fourcc, 18, size) #Change path to saved location
+out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, 18, size) #Change path to saved location
 
 #counter for while loop
 count = 0
@@ -149,7 +151,7 @@ while camera.IsGrabbing():
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
         
-        position = [PositionX(), PositionY(), PositionZ()]
+        #position = [PositionX(), PositionY(), PositionZ()]
 
 ### starting the recording
         
@@ -162,12 +164,12 @@ while camera.IsGrabbing():
             new_time = time.time()
             
             if first == True:
-                print("making a background image over " +str(wait_time_time) + " s")
+                print("making a background image over " +str(wait_time) + " s")
                 first = False
             
             if current_time + wait_time < new_time:
                 
-                print("making a background done")
+                print("making background done")
                 background = False
                 doing_volts = True
                 first = True

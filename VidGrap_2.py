@@ -14,7 +14,7 @@ import cv2
 import sys
 sys.path.append('C:/Users/s102772/Desktop/Ultrasound_acoustofluidics/')
 from AD_func import *
-from frameCut import *
+#from frameCut import *
 import numpy as np
 
 print('Press ESC to close the window')
@@ -34,24 +34,25 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 18 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, FPS, size) #Change path to saved location
+out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS, size) #Change path to saved location
 
 #Connect to analog discovery
 Connect()
-t = 1
-test = 0
-
+#t = 1
+#test = 0
+record = -10
 start = time.time()
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-    record = -1
-    test += 1
+ #   test += 1
     if grabResult.GrabSucceeded():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
-        if t==42:
-            img = img[:,IL:IR]
+# =============================================================================
+#         if t==42:
+#             img = img[:,IL:IR]
+# =============================================================================
         cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
@@ -72,12 +73,14 @@ while camera.IsGrabbing():
             funcStop()
             
 ################################### Deletes unwanted data
-        if t == 5:
-            IL,IR = frameCut(img)
-        if t<6:
-            t+=1
-        elif t!=42:
-            t=42
+# =============================================================================
+#         if t == 5:
+#             IL,IR = frameCut(img)
+#         if t<6:
+#             t+=1
+#         elif t!=42:
+#             t=42
+# =============================================================================
 ###########################################         
                      
 # Close experiment
@@ -85,11 +88,13 @@ while camera.IsGrabbing():
             cv2.destroyAllWindows()
             disconnect()
             break
-        stop = time.time()
-        if (stop-start >= 10):
-            print('Delta_T: ' + str(stop-start))
-            print('expected loops = 10s * 18FPS = 180frames')
-            print('Loops: ' + str(test))
+# =============================================================================
+#         stop = time.time()
+#         if (stop-start >= 10):
+#             print('Delta_T: ' + str(stop-start))
+#             print('expected loops = 10s * 18FPS = 180frames')
+#             print('Loops: ' + str(test))
+# =============================================================================
     grabResult.Release()
 
     
