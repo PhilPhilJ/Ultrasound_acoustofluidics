@@ -6,51 +6,99 @@ Created on Wed Aug 23 10:41:26 2023
 """
 
 
-from pypylon import pylon
-import cv2
-import sys
-sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
-from AD_func import *
 
 ###############################################################################
-### For controlling labb setup.
+### For controlling lab setup.
 
-from ThorlabsFunctions import *
 import numpy as np
 from pypylon import pylon
 import cv2
 import sys
-sys.path.append('C:/Users/s102772/Desktop/Algae_Python')
+sys.path.append(r'C:\Users\s102772\Desktop\Ultrasound_acoustofluidics\Thorlabs')
+from ThorlabsFunctions import *
+import time
 from AD_func import *
+from freqSweep import *
 
+#%%
 ###############################################################################
 ### Move to position
 
-#HomeX()
-#HomeY()
-#HomeZ()
+## Set homed
+Homed = False
+
+if Homed == False:
+    print("Homing...")
+
+    HomeX()
+    HomeAll()
 
 print("The device is homed in all directions")
 
-### Input the starting position. Make sure the device hs not been moved since
+### Input the starting position (bottom position of the tube) and top position. Make sure the device has not been moved since
 ### last use.
 
-coordinate =  [30, 20, 5]
+coordinate_bottom =  [27.38953, 25.43504, 16.31942]
+coordinate_top =  [27.38953, 25.43504, 36.31942]
 
-MoveRelX(coordinate[0])
-MoveRelY(coordinate[1])
-MoveRelZ(coordinate[2])
+tube_length = coordinate_top[2] - coordinate_bottom[2]
+print("coordinate_bottom is " + str(coordinate_bottom + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length)))
 
-start_coordinate = [PositionX(), PositionY(), PositionZ()]
+print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to: "+ str(coordinate_bottom))
+user_input = input('Would you like to continue (y/n)')
+
+if user_input.lower() == 'y':
+    print('user typed "y" and the program will continue')
+elif user_input.lower() == 'n':
+    sys.exit('user typed "n" and the program will terminate now')
+else:
+    print('Type "y" or "n"')
+
+print("moving to starting position")
+MoveRelY(coordinate_bottom[1])
+MoveRelZ(coordinate_bottom[2])
+MoveRelX(coordinate_bottom[0])
 
 print("The device is now in the starting position")
 
+#%%
 ###############################################################################
-### Check the tilt of the device
+### Doing analysis of capillary tube
 
 ## Initialize camara
-print('Press ESC to close the window')
 
+
+#Connect to analog discovery
+Connect()
+
+#number of runs for characterization of tube. note that the tube length is given and one frame is 0.84 mm therefore the number 
+#should be tube_length/frame_height but could be more.
+move_length = 0.84
+runs = np.ceil(tube_length / move_length)
+run_count = 1
+
+#frequency for focusing
+frequency = 3.82 
+
+#voltages for the tone generator
+volts = [1, 10, 20]
+
+#start and stop frequencies for sweep
+sweep = [3, 5]
+
+#Connect to analog discovery
+Connect()
+
+print("Characterization of tube is about to begin and will run for ")
+user_input = input('Would you like to continue (y/n)')
+
+if user_input.lower() == 'y':
+    print('user typed "y" and the program will continue')
+elif user_input.lower() == 'n':
+    sys.exit('user typed "n" and the program will terminate now')
+else:
+    print('Type "y" or "n"')
+    
 # conecting to the first available camera
 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 
@@ -62,102 +110,133 @@ converter = pylon.ImageFormatConverter()
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-#cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
-FPS = 18 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, FPS, size) #Change path to saved location
 
-#Connect to analog discovery
-Connect()
+#the current position of the camera
+position = coordinate_bottom
+
+#path for file to be saved
+path = "C:/Users/s102772/Desktop/" + "P[" + str(position[0]) + "," + str(position[1]) + "," + str(position[2]) + "]F[" + str(frequency) + "]V[" + str(volts[0]) + "," + str(volts[1]) + "," + str(volts[2]) + "]S[" + str(sweep[0]) + "," + str(sweep[1]) + "].mp4"
+
+out = cv2.VideoWriter(path, fourcc, 18, size) #Change path to saved location
+
+#counter for while loop
+count = 0
+
+#messuring the time
+current_time = time.time()
+
+#creating statements
+background = True
+first = True
+doing_volts = False
+doing_sweeps = False
+
+#wait times
+wait_time = 2.5
+
 
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-    record = -1
+    record = True
     
     if grabResult.GrabSucceeded():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+        cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        k = cv2.waitKey(1)
         
+        position = [PositionX(), PositionY(), PositionZ()]
+
+### starting the recording
         
-        #Philip smid din thorlabs kode herind
-        if k == ord('t'):
-            #THorlabs kode
-            print()
 
-
-
-        
-        if k == ord('r'): # press down r to record
-            record = True
-            print('Starting recording..')
-        elif k == ord('s'): #press s to stop recording
-            record = False    
-            print('Stopping recording..')
-        if record:
+        if record == True:
             out.write(img)
-             
+        
+        if background == True:
             
-        if k == ord('f'): # press f
-            funcGen()
-        if k == ord('p'): # press F
-            funcGen(freq=3.82)
-        if k == ord('g'): # press g
-            funcStop()
-# Close experiment
-        if k == 27: # press ESC
-            cv2.destroyAllWindows()
-            disconnect()
-            break
+            new_time = time.time()
+            
+            if first == True:
+                print("making a background image over " +str(wait_time_time) + " s")
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("making a background done")
+                background = False
+                doing_volts = True
+                first = True
+                
+### focusing at different amplitudes
+ 
 
+        if doing_volts == True:
+        
+            new_time = time.time()
+            
+            if first == True:
+                print("Now focusing...")
+                funcGen(freq=frequency, Amplitude=volts[count])
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("Focusing at freguency: " + str(frequency) + " Hz and amplitude: " + str(volts[count]) + " V")
+                count = count + 1
+                first = True
+                
+                if count >= len(volts):
+                    
+                    doing_volts = False
+                    doing_sweeps = True
+
+### doing sweeps in frequencies
+        
+        
+        if doing_sweeps == True:
+        
+            new_time = time.time()
+            
+            if first == True:
+                print("Now sweeping...")
+                freqSweep(start=sweep[0],stop=sweep[1])
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("Freguency sweep from : " + str(sweep[0]) + " Hz to: " + str(sweep[1]) + " Hz")
+                doing_sweeps = False
+                record == False
+                first == True
+                
+### moving to next position
+        
+
+        if record == False:
+            
+            if first == True:
+                print("Now moving to next position...")
+                MoveAbsZ(move_length)
+                first = False
+                
+            moving_position = PositionZ()
+            
+            if moving_position == position[2] + move_length:
+                position[2] = position[2] + moving_position
+                print("Now in next position")
+                run_count = run_count + 1
+                
+                if run_count == runs:
+                    # Close experiment
+                    cv2.destroyAllWindows()
+                    disconnect()
+                    break
 
     grabResult.Release()
-
-    
-# Releasing the resource   
-out.release() 
-camera.StopGrabbing()
-
-
-
-# Moving Thorslab to top 
-
-
-
-while dot == False:
-    picture_hight = 1
-    MoveAbsZ(picture_hight)
-    
-    ## Something camara / find dot
-    if something:
-        dot = True
-## Something camara / focus
-end_coordinate = [PositionX(), PositionY(), PositionZ()]
-
-# Calculating the angle tilt
-tilt = end_coordinate[2] - start_coordinate[2] / end_coordinate[1] - start_coordinate[1]
-angle = np.arctan(tilt)
-
-print("The tilt angle is " +str(angle))
-
-# Move to start
-
-MoveAbsX(start_coordinate[0], start_coordinate[1], start_coordinate[2])
-
-print("The tilt check is done and the device is back in starting position")
-
-###############################################################################
-### Doing analysis of capillary tube
-
-## Initialize camara
-
-# Move in position for analysis
-
-###############################################################################
 
 
