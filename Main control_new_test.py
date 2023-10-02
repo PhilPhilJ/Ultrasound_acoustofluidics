@@ -11,7 +11,7 @@ import numpy as np
 from pypylon import pylon
 import cv2
 import sys
-sys.path.append(r'C:\Users\s102772\Desktop\Ultrasound_acoustofluidics\Thorlabs')
+sys.path.append(r'C:\Users\s102772\Desktop\Ultrasound_acoustofluidics')
 from ThorlabsFunctions import *
 import time
 from AD_func import *
@@ -35,11 +35,11 @@ print("The device is homed in all directions")
 ### Input the starting position (bottom position of the tube) and top position. Make sure the device has not been moved since
 ### last use.
 
-coordinate_bottom =  [27.38953, 25.43504, 16.31942]
-coordinate_top =  [27.38953, 25.43504, 36.31942]
+coordinate_bottom =  [43.04160, 26.24083, 28.9598]
+coordinate_top =  [43.04160, 26.24083, 43.62598]
 
 tube_length = coordinate_top[2] - coordinate_bottom[2]
-print("coordinate_bottom is " + str(coordinate_bottom + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length)))
+print("coordinate_bottom is " + str(coordinate_bottom) + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length))
 
 print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to: "+ str(coordinate_bottom))
 user_input = input('Would you like to continue (y/n)')
@@ -72,7 +72,7 @@ Connect()
 #should be tube_length/frame_height but could be more.
 move_length = 0.84
 runs = np.ceil(tube_length / move_length)
-run_count = 1
+run_count = runs
 
 #frequency for focusing
 frequency = 3.82 
@@ -104,7 +104,7 @@ position = coordinate_bottom
 count = 0
 
 #wait times
-wait_time = 2.5
+wait_time = 1
 
 #creating statements
 background = True
@@ -113,7 +113,9 @@ doing_volts = False
 doing_sweeps = False
 move = False
 
-while runs > 0:
+position = [PositionX(), PositionY(), PositionZ()]
+
+while run_count > 0:
     #messuring the time
     current_time = time.time()
     
@@ -124,7 +126,7 @@ while runs > 0:
         new_time = time.time()
         
         if first == True:
-            print("making a background image over " +str(wait_time_time) + " s")
+            print("making a background image over " +str(wait_time) + " s")
             first = False
         
         if current_time + wait_time < new_time:
@@ -133,7 +135,7 @@ while runs > 0:
             background = False
             doing_volts = True
             first = True
-            position = [PositionX(), PositionY(), PositionZ()]
+            current_time = time.time()
             
     ### focusing at different amplitudes
      
@@ -153,16 +155,19 @@ while runs > 0:
             first = True
             doing_sweeps = True
             count += 1
+            current_time = time.time()
             
             if count == len(volts):
                 
                 doing_volts = False
+                count = 0
+
     
     ### doing sweeps in frequencies
     
     
     #this part is not done yet and only does a print-statement
-    if doing_sweeps == True:
+    while doing_sweeps == True:
     
         new_time = time.time()
         
@@ -170,34 +175,50 @@ while runs > 0:
             print("Now sweeping...")
             #freqSweep(start=sweep[0],stop=sweep[1])
             first = False
+            current_time = time.time()
         
         if current_time + wait_time < new_time:
             
             print("Freguency sweep from: " + str(sweep[0]) + " Hz to: " + str(sweep[1]) + " Hz with: " + str(volts[count]) + " V")
 
-            first == True
-            
+            first = True
             count += 1
+            current_time = time.time()
             
-            if count == len(volts):
+            
+            if count == 3:#change tihs to len(volt)
                 
                 doing_sweeps = False
                 move = True
+                count = 0
+
             
     ### moving to next position
-    
     
     while move == True:
         
         if first == True:
             print("Now moving to next position...")
-            MoveAbsZ(move_length)
+            MoveRelZ(move_length)
+            current_time = time.time()
             first = False
             
-        moving_position = PositionZ()
         
-        if moving_position == position[2] + move_length:
-            position[2] = position[2] + moving_position
+        new_time = time.time()
+          
+    
+        if current_time + wait_time < new_time:
+            position[2] = PositionZ()
             print("Now in next position")
-            run_count -= run_count + 1
+            run_count -= 1
             
+            #creating statements
+            background = True
+            first = True
+            doing_volts = False
+            doing_sweeps = False
+            move = False
+            
+            print("there are " + str(run_count) + " left out of a total of " + str(runs))
+            
+print("characterization of tube is done")
