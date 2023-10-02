@@ -341,7 +341,7 @@ def MoveRelY(distance=1):
             moving = False
 
     position = lib.SCC_GetPositionCounter(serialNumber)
-    print("Thorlabs moved " + str(distance) + "mm in the y direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
+    print("Thorlabs moved " + str(distance) + "mm in the x direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
     
     lib.SCC_ClearMessageQueue(serialNumber)
     lib.SCC_StopPolling(serialNumber)
@@ -587,7 +587,7 @@ def MoveRelZ(distance=1):
             moving = False
     
     position = lib.SCC_GetPositionCounter(serialNumber)
-    print("Thorlabs moved " + str(distance) + "mm in the z direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
+    print("Thorlabs moved " + str(distance) + "mm in the x direction and is now at " + str(round(position/scale_fc , 2)) + "mm")
     
     lib.SCC_ClearMessageQueue(serialNumber)
     lib.SCC_StopPolling(serialNumber)

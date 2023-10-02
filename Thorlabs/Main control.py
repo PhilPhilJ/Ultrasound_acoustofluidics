@@ -18,31 +18,33 @@ sys.path.append(r'C:\Users\s102772\Desktop\Ultrasound_acoustofluidics\Thorlabs')
 from ThorlabsFunctions import *
 import time
 from AD_func import *
+#from freqSweep import *
 
 #%%
 ###############################################################################
 ### Move to position
 
-## Set homed
-Homed = False
+## Change this to skib if already homed
+Homed = True
 
 if Homed == False:
     print("Homing...")
-    #MoveAbsX(-1)
-    #MoveAbsY(-1)
-    #MoveAbsZ(-1)
+
     HomeX()
     HomeAll()
 
 print("The device is homed in all directions")
 
-### Input the starting position. Make sure the device hs not been moved since
+### Input the starting position (bottom position of the tube) and top position. Make sure the device has not been moved since
 ### last use.
 
-coordinate =  [27.38953, 25.43504, 16.31942]
+coordinate_bottom =  [45.044275, 26.14545, 27.02866]
+coordinate_top =  [44.797575, 26.19676, 48.31306]
 
-print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to:")
-print(coordinate)
+tube_length = coordinate_top[2] - coordinate_bottom[2]
+print("coordinate_bottom is " + str(coordinate_bottom) + ", coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length))
+
+print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to: "+ str(coordinate_bottom))
 user_input = input('Would you like to continue (y/n)')
 
 if user_input.lower() == 'y':
@@ -51,12 +53,15 @@ elif user_input.lower() == 'n':
     sys.exit('user typed "n" and the program will terminate now')
 else:
     print('Type "y" or "n"')
+    
+##Change this to skib if in starting position
+in_start_pos = True
 
-MoveRelY(coordinate[1])
-MoveRelZ(coordinate[2])
-MoveRelX(coordinate[0])
-
-start_coordinate = [PositionX(), PositionY(), PositionZ()]
+if in_start_pos == False:
+    print("moving to starting position")
+    MoveRelY(coordinate_bottom[1])
+    MoveRelZ(coordinate_bottom[2])
+    MoveRelX(coordinate_bottom[0])
 
 print("The device is now in the starting position")
 
@@ -66,9 +71,36 @@ print("The device is now in the starting position")
 
 ## Initialize camara
 
-# Move in position for analysis
-print('Press ESC to close the window')
 
+#Connect to analog discovery
+Connect()
+
+#number of runs for characterization of tube. note that the tube length is given and one frame is 0.84 mm therefore the number 
+#should be tube_length/frame_height but could be more.
+move_length = 0.84
+runs = np.ceil(tube_length / move_length)
+run_count = 1
+
+#frequency for focusing
+frequency = 3.82 
+
+#voltages for the tone generator
+volts = [1, 10, 20]
+
+#start and stop frequencies for sweep
+sweep = [3, 5]
+
+
+print("Characterization of tube is about to begin and will run for ")
+user_input = input('Would you like to continue (y/n)')
+
+if user_input.lower() == 'y':
+    print('user typed "y" and the program will continue')
+elif user_input.lower() == 'n':
+    sys.exit('user typed "n" and the program will terminate now')
+else:
+    print('Type "y" or "n"')
+    
 # conecting to the first available camera
 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 
@@ -80,92 +112,133 @@ converter = pylon.ImageFormatConverter()
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-#size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
-#fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-#out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_7.mp4', fourcc, 18, size) #Change path to saved location
+size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
+fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
 
-#Connect to analog discovery
-#Connect()
+#the current position of the camera
+position = coordinate_bottom
 
-initialize_analysis = False
-firsttime = True
+#path for file to be saved
+path = "C:/Users/s102772/Desktop/" + "P[" + str(position[0]) + "," + str(position[1]) + "," + str(position[2]) + "]F[" + str(frequency) + "]V[" + str(volts[0]) + "," + str(volts[1]) + "," + str(volts[2]) + "]S[" + str(sweep[0]) + "," + str(sweep[1]) + "].mp4"
 
-# Set the amount of time to analyse algae focusing
-t_end = time.time() + 10
+out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, 18, size) #Change path to saved location
+
+#counter for while loop
+count = 0
+
+#messuring the time
+current_time = time.time()
+
+#creating statements
+background = True
+first = True
+doing_volts = False
+doing_sweeps = False
+
+#wait times
+wait_time = 2.5
+
 
 while camera.IsGrabbing():
-    
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+    record = True
+    
+    if grabResult.GrabSucceeded():
+        # Access the image data
+        image = converter.Convert(grabResult)
+        img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+        cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
+        cv2.imshow('Algae experiment', img)
+        
+        #position = [PositionX(), PositionY(), PositionZ()]
 
-    # Access the image data
-    image = converter.Convert(grabResult)
-    img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
-    cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
-    cv2.imshow('Algae experiment', img)
-    
-    ## Determining the length of the tube
-    
-    
-    img_mean_y = np.mean(img, axis = 1)
-    gradient_y = abs(np.diff(img_mean_y))
-    
-    if np.max(gradient_y) > 0.5:
-        MoveAbsZ(0.1)
+### starting the recording
         
-    else:   
-        bottom_z = PositionZ()
-        done = True
-    
-    
-    img_mean_y = np.mean(img, axis = 1)
-    gradient_y = abs(np.diff(img_mean_y))
-    
-    if np.max(gradient_y) < 0.5:
-        MoveAbsZ(0.1)
+
+        if record == True:
+            out.write(img)
         
-    else:   
-        top_z = PositionZ()
-        done = True
-    
-    tube_length = top_z - bottom_z
-    runs = 10
-    
-    
-    initialize_analysis = True    
-    if initialize_analysis == True:
-        
-        MoveAbsX(-1)
-        MoveAbsZ(-1)
-        MoveAbsZ(bottom_z)
-        MoveAbsX(start_coordinate[0])
-        
-        for run in range(runs):
-            funcGen()
-            time.sleep(5)
-            funcStop()
+        if background == True:
             
-            MoveRelZ(tube_length / runs)
-        
-        
-    if current_position >= top_z:
-        
-        cv2.destroyAllWindows()
-        disconnect()
-        break
+            new_time = time.time()
+            
+            if first == True:
+                print("making a background image over " +str(wait_time) + " s")
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("making background done")
+                background = False
+                doing_volts = True
+                first = True
+                
+### focusing at different amplitudes
+ 
 
+        if doing_volts == True:
+        
+            new_time = time.time()
+            
+            if first == True:
+                print("Now focusing...")
+                funcGen(freq=frequency, Amplitude=volts[count])
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("Focusing at freguency: " + str(frequency) + " Hz and amplitude: " + str(volts[count]) + " V")
+                count = count + 1
+                first = True
+                
+                if count >= len(volts):
+                    
+                    doing_volts = False
+                    doing_sweeps = True
+
+### doing sweeps in frequencies
+        
+        
+        if doing_sweeps == True:
+        
+            new_time = time.time()
+            
+            if first == True:
+                print("Now sweeping...")
+                freqSweep(start=sweep[0],stop=sweep[1])
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("Freguency sweep from : " + str(sweep[0]) + " Hz to: " + str(sweep[1]) + " Hz")
+                doing_sweeps = False
+                record == False
+                first == True
+                
+### moving to next position
+        
+
+        if record == False:
+            
+            if first == True:
+                print("Now moving to next position...")
+                MoveAbsZ(move_length)
+                first = False
+                
+            moving_position = PositionZ()
+            
+            if moving_position == position[2] + move_length:
+                position[2] = position[2] + moving_position
+                print("Now in next position")
+                run_count = run_count + 1
+                
+                if run_count == runs:
+                    # Close experiment
+                    cv2.destroyAllWindows()
+                    disconnect()
+                    break
 
     grabResult.Release()
-
-    
-# Releasing the resource   
-out.release() 
-camera.StopGrabbing()
-
-#%%
-###############################################################################
-###############################################################################
-### Check the tilt of the device
-
-## Initialize camara
 
 
