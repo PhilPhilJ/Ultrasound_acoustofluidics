@@ -49,7 +49,7 @@ def frameCut(frame):
 #     
 # =============================================================================
     ######################################## Functions end ########################################
-    funcStop = True
+#    funcStop = True
     frame_length = np.size(frame, axis=0)
 
     fig, ax1 = plt.subplots()
@@ -91,9 +91,9 @@ def frameCut(frame):
     
 
             
-    plt.close(fig)
+    plt.show()
     
-    return index_left_side, index_right_side, px_per_mm
+    return index_left_side, index_right_side#, px_per_mm
      
 #%%
 
@@ -107,4 +107,4 @@ frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Converts the frame to grayscale
 #%%
 
 frameCut(frame)
-plt.show()
+plt.close('all')
