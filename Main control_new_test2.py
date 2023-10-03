@@ -23,7 +23,8 @@ from freqSweep import *
 ### Move to position
 
 ## Set homed
-Homed = False
+Homed = True
+in_position = True
 
 if Homed == False:
     print("Homing...")
@@ -52,10 +53,11 @@ elif user_input.lower() == 'n':
 else:
     print('Type "y" or "n"')
 
-print("moving to starting position")
-MoveRelY(coordinate_bottom[1])
-MoveRelZ(coordinate_bottom[2])
-MoveRelX(coordinate_bottom[0])
+if in_position == False:
+    print("moving to starting position")
+    MoveRelY(coordinate_bottom[1])
+    MoveRelZ(coordinate_bottom[2])
+    MoveRelX(coordinate_bottom[0])
 
 print("The device is now in the starting position")
 
@@ -78,7 +80,7 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
-FPS = 18 # Frames per second of camera
+FPS = 7.4 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
 out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS, size) #Change path to saved location
 
@@ -123,7 +125,7 @@ position = coordinate_bottom
 count = 0
 
 #wait times
-wait_time = 1
+wait_time = 10
 
 #creating statements
 background = True
@@ -140,39 +142,45 @@ while run_count > 0:
     
     ### Making background
     
-    start = time.time()
     
     record = True
-    while camera.IsGrabbing():
-        grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-        if grabResult.GrabSucceeded():
-            # Access the image data
-            image = converter.Convert(grabResult)
-            img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
-            cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        grabResult.Release()
-        
-        while background == True:
-            
-            new_time = time.time()
-            
-            if first == True:
-                print("making a background image over " +str(wait_time) + " s")
-                first = False
-            
-            if current_time + wait_time < new_time:
+    while background == True:
+        while camera.IsGrabbing():
+            grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+            if grabResult.GrabSucceeded():
+                # Access the image data
+                image = converter.Convert(grabResult)
+                img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+                #cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
-                print("making a background done")
-                background = False
-                doing_volts = True
-                first = True
-                record = False
-                current_time = time.time()
-
-    # Releasing the resource   
-    out.release() 
-    camera.StopGrabbing()
+                out.write(img)
+                
+                new_time = time.time()
+                
+                if first == True:
+                    print("making a background image over " +str(wait_time) + " s")
+                    print(str(new_time-current_time) + "*")
+                    first = False
+                
+                if current_time + wait_time < new_time:
+                    
+                    print("making a background done")
+                    background = False
+                    doing_volts = True
+                    first = True
+                    record = False
+                    
+                    current_time = time.time()
+                
+                if record == False:
+                    print(str(new_time-current_time) + "**")
+                    break
+                    
+                grabResult.Release()
+    
+        # Releasing the resource   
+        out.release() 
+        camera.StopGrabbing()
     
             
     ### focusing at different amplitudes
