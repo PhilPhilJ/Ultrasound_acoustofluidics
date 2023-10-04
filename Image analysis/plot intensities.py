@@ -56,7 +56,7 @@ del frame, ret, ret_2, frame_mean, back_frame, back_frame_mean, vid, vid_back
 plt.close('all')
 
 fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True, sharey=True)
-
+back_over_time = np.zeros(n_frames_back)
 
 def update(val):
     frame_val = int(Slider_val.val)-1
@@ -81,14 +81,25 @@ ax1.set_ylim(np.mean(mean_background)*0.95, np.mean(mean_background)*1.05)
 #ax1.set_ylim([np.min(mean_background)-1, np.max(mean_background)+1])
 
 
-for i in range(np.size(background, axis=0)):
+for i in range(n_frames_back):
     ax2.plot(np.arange(min_bound,max_bound), background[i,:], color='r')
+    back_over_time[i] = np.mean(background[i,1430:1800])
+    
 ax2.set_title('Background intensity over time', fontsize='12.5')
 
 ax3.plot(np.arange(min_bound,max_bound), mean_background, color='r')
 ax3.set_title('Mean background', fontsize='12.5')
 
 #plt.savefig('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/background_plots.png', dpi=300) #Save the plot
+#%%
+plt.close('all')
+plt.plot(np.arange(n_frames_back)/18, back_over_time)
+plt.title('Background intensity over time [2680:3050]', fontsize='20')
+plt.xlabel('Time [s]', fontsize='15')
+plt.ylabel('Intensity [0:255]', fontsize='15')
+
+plt.show()
+
 
 #%%
 plt.close('all')
