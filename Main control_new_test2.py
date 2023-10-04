@@ -65,6 +65,11 @@ print("The device is now in the starting position")
 ###############################################################################
 ### Doing analysis of capillary tube
 
+## setting up folder for videos
+newpath = r'C:\Users\Phili\OneDrive\Skrivebord' #change path to save location
+first_folder_path = os.path.join(newpath, 'Algae experiment')
+os.mkdir(new_folder_path)
+
 ## Initialize camara
 
 # conecting to the first available camera
@@ -82,7 +87,7 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 7.4 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS, size) #Change path to saved location
+out = cv2.VideoWriter(os.path.join(first_folder_path, roc_name), fourcc, FPS, size) #Change path to saved location
 
 record = -False
 
@@ -93,7 +98,7 @@ Connect()
 #should be tube_length/frame_height but could be more.
 move_length = 0.84
 runs = np.ceil(tube_length / move_length)
-run_count = runs
+run_count = 0
 
 #frequency for focusing
 frequency = 3.82 
@@ -102,7 +107,12 @@ frequency = 3.82
 volts = [1, 10, 20]
 
 #start and stop frequencies for sweep
-sweep = [3, 5]
+sweep_int = [frequency - 0.1, frequency + 0.1]
+step = 5
+sweep = np.linspace(sweep_int[0], sweep_int[1], step)
+sweeper = 0
+frequency = sweep[sweeper]
+
 
 #Connect to analog discovery
 Connect()
@@ -130,114 +140,106 @@ wait_time = 10
 #creating statements
 background = True
 first = True
-doing_volts = False
-doing_sweeps = False
+focus = False
 move = False
 
 position = [PositionX(), PositionY(), PositionZ()]
 
-while run_count > 0:
+while run_count != runs:
+    
+    ## creating the folder for this nun
+    second_folder_path = os.path.join(new_folder_path,  str(run_count + 1) + ". run")
+    os.mkdir(new_folder_path)
+    
     #messuring the time
     current_time = time.time()
     
     ### Making background
     
     
+    roc_name = "\backgroung_" + str(run_count + 1)
     record = True
-    while background == True:
-        while camera.IsGrabbing():
-            grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-            if grabResult.GrabSucceeded():
-                # Access the image data
-                image = converter.Convert(grabResult)
-                img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
-                #cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                
-                out.write(img)
-                
-                new_time = time.time()
-                
-                if first == True:
-                    print("making a background image over " +str(wait_time) + " s")
-                    print(str(new_time-current_time) + "*")
-                    first = False
-                
-                if current_time + wait_time < new_time:
-                    
-                    print("making a background done")
-                    background = False
-                    doing_volts = True
-                    first = True
-                    record = False
-                    
-                    current_time = time.time()
-                
-                if record == False:
-                    print(str(new_time-current_time) + "**")
-                    break
-                    
-                grabResult.Release()
-    
-        # Releasing the resource   
-        out.release() 
-        camera.StopGrabbing()
-    
+    while camera.IsGrabbing() and background:
+        grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        if grabResult.GrabSucceeded():
+            # Access the image data
+            image = converter.Convert(grabResult)
+            img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+            #cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             
-    ### focusing at different amplitudes
+            out.write(img)
+            
+            new_time = time.time()
+            
+            if first == True:
+                print("making a background image over " +str(wait_time) + " s")
+                print(str(new_time-current_time) + "*")
+                first = False
+            
+            if current_time + wait_time < new_time:
+                
+                print("making a background done")
+                background = False
+                focus = True
+                first = True
+                record = False
+                
+                current_time = time.time()
+            
+            if record == False:
+                break
+                
+            grabResult.Release()
+
+    # Releasing the resource   
+    out.release() 
+    camera.StopGrabbing()
+
+            
+    ### focusing at different amplitudes and frequencies
      
-    
-    while doing_volts == True:
-    
-        new_time = time.time()
-        
-        if first == True:
-            print("Now focusing...")
-            funcGen(freq=frequency, Amplitude=volts[count])
-            first = False
-        
-        if current_time + wait_time < new_time:
+    roc_name = "\focus" + str(run_count + 1)
+    while camera.IsGrabbing() and focus:
+        grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        if grabResult.GrabSucceeded():
+            # Access the image data
+            image = converter.Convert(grabResult)
+            img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+            #cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             
-            print("Focusing at freguency: " + str(frequency) + " Hz and amplitude: " + str(volts[count]) + " V")
-            first = True
-            doing_sweeps = True
-            count += 1
-            current_time = time.time()
+            out.write(img)
             
-            if count == len(volts):
+            new_time = time.time()
+            
+            if first == True:
+                print("Now focusing...")
+                funcGen(freq=frequency, Amplitude=volts[count])
+                first = False
+            
+            if current_time + wait_time < new_time:
                 
-                doing_volts = False
-                count = 0
-
-    
-    ### doing sweeps in frequencies
-    
-    
-    #this part is not done yet and only does a print-statement
-    while doing_sweeps == True:
-    
-        new_time = time.time()
-        
-        if first == True:
-            print("Now sweeping...")
-            #freqSweep(start=sweep[0],stop=sweep[1])
-            first = False
-            current_time = time.time()
-        
-        if current_time + wait_time < new_time:
-            
-            print("Freguency sweep from: " + str(sweep[0]) + " Hz to: " + str(sweep[1]) + " Hz with: " + str(volts[count]) + " V")
-
-            first = True
-            count += 1
-            current_time = time.time()
-            
-            
-            if count == 3:#change tihs to len(volt)
+                print("Focusing at freguency: " + str(frequency) + " Hz and amplitude: " + str(volts[count]) + " V")
+                first = True
+                count += 1
+                current_time = time.time()
                 
-                doing_sweeps = False
-                move = True
-                count = 0
+                if count == len(volts):
+                    
+                    count = 0
+                    sweeper += 1
+                    
+                    if sweeper == len(sweep):
+                        focus = False
+            
+            if record == False:
+                break
+                
+            grabResult.Release()
 
+    # Releasing the resource   
+    out.release() 
+    camera.StopGrabbing()
+    
             
     ### moving to next position
     
@@ -256,15 +258,19 @@ while run_count > 0:
         if current_time + wait_time < new_time:
             position[2] = PositionZ()
             print("Now in next position")
-            run_count -= 1
+            run_count += 1
             
             #creating statements
             background = True
             first = True
-            doing_volts = False
-            doing_sweeps = False
+            focus = False
+
             move = False
             
-            print("there are " + str(run_count) + " left out of a total of " + str(runs))
-            
+            print(str(run_count) + ".  out of a total of " + str(runs))
+
+
+file = open('output.txt', 'w')
+file.write('Here is some data')
+file.close()
 print("characterization of tube is done")
