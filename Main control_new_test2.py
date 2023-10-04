@@ -66,9 +66,9 @@ print("The device is now in the starting position")
 ### Doing analysis of capillary tube
 
 ## setting up folder for videos
-newpath = r'C:\Users\Phili\OneDrive\Skrivebord' #change path to save location
-first_folder_path = os.path.join(newpath, 'Algae experiment')
-os.mkdir(new_folder_path)
+newpath = 'C:/Users/s102772/Desktop/test_folder/' #change path to save location
+first_folder_path = newpath + 'Algae experiment/'
+os.mkdir(first_folder_path)
 
 ## Initialize camara
 
@@ -87,7 +87,7 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 7.4 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
-out = cv2.VideoWriter(os.path.join(first_folder_path, roc_name), fourcc, FPS, size) #Change path to saved location
+
 
 record = -False
 
@@ -148,16 +148,18 @@ position = [PositionX(), PositionY(), PositionZ()]
 while run_count != runs:
     
     ## creating the folder for this nun
-    second_folder_path = os.path.join(new_folder_path,  str(run_count + 1) + ". run")
-    os.mkdir(new_folder_path)
+    second_folder_path = first_folder_path + str(run_count + 1) + "_run/"
+    os.mkdir(second_folder_path)
     
     #messuring the time
     current_time = time.time()
     
     ### Making background
     
-    
-    roc_name = "\backgroung_" + str(run_count + 1)
+    roc_name = "backgroung_" + str(run_count + 1) + ".mp4"
+    name_loc = second_folder_path + roc_name
+    print(name_loc)
+    out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
     record = True
     while camera.IsGrabbing() and background:
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -173,7 +175,6 @@ while run_count != runs:
             
             if first == True:
                 print("making a background image over " +str(wait_time) + " s")
-                print(str(new_time-current_time) + "*")
                 first = False
             
             if current_time + wait_time < new_time:
@@ -198,7 +199,10 @@ while run_count != runs:
             
     ### focusing at different amplitudes and frequencies
      
-    roc_name = "\focus" + str(run_count + 1)
+    roc_name = "focus_" + str(run_count + 1) + ".mp4"
+    name_loc = second_folder_path + roc_name
+    print(name_loc)
+    out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
     while camera.IsGrabbing() and focus:
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
         if grabResult.GrabSucceeded():
