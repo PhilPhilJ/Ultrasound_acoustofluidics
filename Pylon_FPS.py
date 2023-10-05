@@ -12,14 +12,9 @@ import time
 import random
 import cv2
 
-
-camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
-camera.Open()
-
-# to get consistant results it is always good to start from "power-on" state
-#camera.UserSetSelector = "Default"
-#camera.UserSetLoad.Execute()
-
+if not 'camera' in globals():
+    camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+    camera.Open()
 
 #%%
 # The parameter MaxNumBuffer can be used to control the count of buffers
