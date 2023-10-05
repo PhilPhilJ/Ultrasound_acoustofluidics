@@ -86,7 +86,7 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 7.4 # Frames per second of camera
-fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
+fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
 
 
 record = -False
@@ -135,7 +135,7 @@ position = coordinate_bottom
 count = 0
 
 #wait times
-wait_time = 10
+wait_time = 2
 
 #creating statements
 background = True
@@ -149,6 +149,7 @@ while run_count != runs:
     
     ## creating the folder for this nun
     second_folder_path = first_folder_path + str(run_count + 1) + "_run/"
+    print(second_folder_path)
     os.mkdir(second_folder_path)
     
     #messuring the time
@@ -234,6 +235,7 @@ while run_count != runs:
                     
                     if sweeper == len(sweep):
                         focus = False
+                        move = True
             
             if record == False:
                 break
@@ -262,7 +264,7 @@ while run_count != runs:
         if current_time + wait_time < new_time:
             position[2] = PositionZ()
             print("Now in next position")
-            run_count += 1
+            #run_count += 1
             
             #creating statements
             background = True
@@ -272,7 +274,8 @@ while run_count != runs:
             move = False
             
             print(str(run_count) + ".  out of a total of " + str(runs))
-
+    run_count += 1
+    
 
 file = open('output.txt', 'w')
 file.write('Here is some data')
