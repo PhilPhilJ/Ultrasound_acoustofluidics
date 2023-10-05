@@ -60,6 +60,7 @@ while camera.IsGrabbing():
           print('Stop timing')
           print('Stop-start= ' + str(stop-start) + ' s')
           break
+      
       if 'start' in globals() and stop-start<delta_t:
           out.write(img)
 
