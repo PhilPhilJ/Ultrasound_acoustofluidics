@@ -37,8 +37,8 @@ print("The device is homed in all directions")
 ### Input the starting position (bottom position of the tube) and top position. Make sure the device has not been moved since
 ### last use.
 
-coordinate_bottom =  [43.04160, 26.24083, 28.9598]
-coordinate_top =  [43.04160, 26.24083, 43.62598]
+coordinate_bottom =  [43.16, 26.16, 28.9598]
+coordinate_top =  [43.16, 26.16, 43.62598]
 
 tube_length = coordinate_top[2] - coordinate_bottom[2]
 print("coordinate_bottom is " + str(coordinate_bottom) + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(tube_length))
@@ -88,8 +88,11 @@ size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 7.4 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
 
-
-record = -False
+##other parameters
+temp = "24 C"
+humid = "19%"
+gain = "10 dB"
+lamp = "10 V and 3.5 A"
 
 #Connect to analog discovery
 Connect()
@@ -97,7 +100,7 @@ Connect()
 #number of runs for characterization of tube. note that the tube length is given and one frame is 0.84 mm therefore the number 
 #should be tube_length/frame_height but could be more.
 move_length = 0.84
-runs = np.ceil(tube_length / move_length)
+runs = 2#np.ceil(tube_length / move_length)
 run_count = 0
 
 #frequency for focusing
@@ -145,6 +148,10 @@ move = False
 
 position = [PositionX(), PositionY(), PositionZ()]
 
+file = open(str(first_folder_path) + "general data.txt", 'w')
+file.write("Temperature =" + str(temp) + ", humidity =" + str(humid) + ", Gain =" + str(gain) + ", Light =" + str(lamp))
+file.close()
+
 while run_count != runs:
     
     ## creating the folder for this nun
@@ -161,8 +168,8 @@ while run_count != runs:
     name_loc = second_folder_path + roc_name
     print(name_loc)
     out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
-    record = True
-    while camera.IsGrabbing() and background:
+    
+    while background:
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
         if grabResult.GrabSucceeded():
             # Access the image data
@@ -184,34 +191,30 @@ while run_count != runs:
                 background = False
                 focus = True
                 first = True
-                record = False
-                
                 current_time = time.time()
-            
-            if record == False:
+                
+                grabResult.Release()
                 break
                 
-            grabResult.Release()
+        
 
     # Releasing the resource   
     out.release() 
-    camera.StopGrabbing()
+    #camera.StopGrabbing()
 
             
     ### focusing at different amplitudes and frequencies
      
     roc_name = "focus_" + str(run_count + 1) + ".mp4"
     name_loc = second_folder_path + roc_name
-    print(name_loc)
     out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
-    while camera.IsGrabbing() and focus:
+    while focus:
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
         if grabResult.GrabSucceeded():
             # Access the image data
             image = converter.Convert(grabResult)
             img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
             #cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            
             out.write(img)
             
             new_time = time.time()
@@ -232,23 +235,28 @@ while run_count != runs:
                     
                     count = 0
                     sweeper += 1
+                    frequency = sweep[sweeper]
                     
                     if sweeper == len(sweep):
                         focus = False
                         move = True
+                        sweeper = 0
+                        
+                        file = open(str(second_folder_path) + "data.txt", 'w')
+                        file.write('Position =' + str(position) + "mm, Amplitudes =" + str(volts) + "V, Frequencies =" + str(sweep) + "Hz, wait time =" + str(wait_time) + "s")
+                        file.close()
             
-            if record == False:
-                break
-                
-            grabResult.Release()
+                        grabResult.Release()    
+                        break
+                        
 
     # Releasing the resource   
     out.release() 
-    camera.StopGrabbing()
+    #camera.StopGrabbing()
     
             
     ### moving to next position
-    
+
     while move == True:
         
         if first == True:
@@ -276,8 +284,6 @@ while run_count != runs:
             print(str(run_count) + ".  out of a total of " + str(runs))
     run_count += 1
     
+camera.StopGrabbing()
 
-file = open('output.txt', 'w')
-file.write('Here is some data')
-file.close()
 print("characterization of tube is done")

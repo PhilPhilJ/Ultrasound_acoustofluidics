@@ -1,0 +1,1 @@
+C:/Users/s102772/Desktop/test_folder/Algae experiment/2_run/Position =[0.0, 0.0, 6.719916044776119]mm, Amplitudes =[1, 10, 20]V, Frequencies =[3.72 3.77 3.82 3.87 3.92]
