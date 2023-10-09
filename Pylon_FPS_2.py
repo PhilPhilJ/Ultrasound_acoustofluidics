@@ -10,6 +10,7 @@ from pypylon import pylon
 import numpy as np
 import time
 import cv2
+from frameCut import *
 
 #Connects to the camera
 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
@@ -40,11 +41,14 @@ while camera.IsGrabbing():
           # Access the image data
           image = converter.Convert(grabResult)
           img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
+          if not 'IL' in globals() and not 'IR' in globals():
+              IL,IR = frameCut(img)
+          img = img[:,IL:IR]
           stop = time.time() 
                 
           cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
           cv2.imshow('Algae experiment', img)
-                
+
       if not 'start' in globals(): #If the variable start doesn't exist define a start time and start recording
           start = time.time()
           print('Start timing')
