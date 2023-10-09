@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Created on Tue Oct  3 13:12:37 2023
 
@@ -168,6 +168,7 @@ while run_count != runs:
     name_loc = second_folder_path + roc_name
     print(name_loc)
     out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
+    start_time = time.time()
     
     while background:
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -191,6 +192,10 @@ while run_count != runs:
                 background = False
                 focus = True
                 first = True
+                end_time = time.time()
+                file = open(str(second_folder_path) + "data.txt", 'w')
+                file.write("The start- and end times are: " + str(start_time) + " " + str(end_time) +"\n") 
+                
                 current_time = time.time()
                 
                 grabResult.Release()
@@ -208,6 +213,8 @@ while run_count != runs:
     roc_name = "focus_" + str(run_count + 1) + ".mp4"
     name_loc = second_folder_path + roc_name
     out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
+    start_time = time.time()
+    
     while focus:
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
         if grabResult.GrabSucceeded():
@@ -242,8 +249,8 @@ while run_count != runs:
                         move = True
                         sweeper = 0
                         
-                        file = open(str(second_folder_path) + "data.txt", 'w')
-                        file.write('Position =' + str(position) + "mm, Amplitudes =" + str(volts) + "V, Frequencies =" + str(sweep) + "Hz, wait time =" + str(wait_time) + "s")
+                        file = open(str(second_folder_path) + "data.txt", 'a')
+                        file.write('Position =' + str(position) + "mm, Amplitudes =" + str(volts) + "V, Frequencies =" + str(sweep) + "Hz, wait time =" + str(wait_time) + "s" + ". Start time: " + str(start_time) + ". End time: " + str(end_time))
                         file.close()
             
                         grabResult.Release()    
