@@ -31,6 +31,8 @@ FPS = 18 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Defines output format, mp4
 out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS, size) #Defines a path to where the movie is saved, video format, playback framerate, and video size/resolution
 
+video = np.empty(size) #Creates a matrix to store the video file
+
 delta_t = 10 #How long should the recording be, measured in seconds
 
 if 'start' in globals():
@@ -41,9 +43,7 @@ while camera.IsGrabbing():
           # Access the image data
           image = converter.Convert(grabResult)
           img = image.GetArray() # Array of size (4504, 4504, 3) = (pixel, pixel, rgb)
-          if not 'IL' in globals() and not 'IR' in globals():
-              IL,IR = frameCut(img)
-          img = img[:,IL:IR]
+          video = np.append(video, img, axis=2)
           stop = time.time() 
                 
           cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
@@ -57,8 +57,8 @@ while camera.IsGrabbing():
           print('Stop-start= ' + str(stop-start) + ' s')
           break
       
-      if 'start' in globals() and stop-start<delta_t:
-          out.write(img)
+      #if 'start' in globals() and stop-start<delta_t:
+      #    out.write(img)
 
       grabResult.Release()
 
@@ -66,16 +66,14 @@ cv2.destroyAllWindows()
 out.release() 
 camera.StopGrabbing()
 
-
+#%%
 # This part loads the video that the script created and computes a framerate (FPS) based on the movie
-# =============================================================================
-# vid = cv2.VideoCapture('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4') #Loads the video
-# 
-# n_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)
-# FPS = round(n_frames/(stop-start),2)
-# 
-# print('FPS: ' + str(FPS))
-# =============================================================================
+vid = cv2.VideoCapture('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4') #Loads the video
+
+n_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)
+FPS = round(n_frames/(stop-start),2)
+
+print('FPS: ' + str(FPS))
 
 
 
