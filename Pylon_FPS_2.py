@@ -10,7 +10,6 @@ from pypylon import pylon
 import numpy as np
 import time
 import cv2
-from frameCut import *
 
 #Connects to the camera
 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
@@ -64,11 +63,11 @@ while camera.IsGrabbing():
 
       grabResult.Release()
 
-cv2.destroyAllWindows()      
-out.release() 
+#cv2.destroyAllWindows()      
+#out.release() 
 camera.StopGrabbing()
 
-#%%
+
 # This part loads the video that the script created and computes a framerate (FPS) based on the movie
 #vid = cv2.VideoCapture('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4') #Loads the video
 
