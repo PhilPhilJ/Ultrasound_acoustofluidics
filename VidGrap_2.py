@@ -35,7 +35,6 @@ size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
 FPS = 18.0 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*'MP4V') #Defines output format, mp4
 out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS, size, False) #Change path to saved location
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS, size, False) #Change path to saved location
 
 #Connect to analog discovery
 Connect()
