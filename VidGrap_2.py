@@ -40,7 +40,7 @@ out = cv2.VideoWriter('C:/Users/s102772/Desktop/Algae_Vid_Exp.mp4', fourcc, FPS,
 Connect()
 #t = 1
 #test = 0
-record = -10
+record = False
 start = time.time()
 while camera.IsGrabbing():
     grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)

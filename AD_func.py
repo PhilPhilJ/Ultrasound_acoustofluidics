@@ -100,7 +100,7 @@ def funcGen(shape=funcSine,freq=1.91,Amplitude=1,v_Offset=0):
     dwf.FDwfAnalogOutNodeAmplitudeSet(hdwf, channel, AnalogOutNodeCarrier, c_double(Amplitude)) # Sets the signal amplitude in volts i.e. 1 = 1V
     dwf.FDwfAnalogOutNodeOffsetSet(hdwf, channel, AnalogOutNodeCarrier, c_double(v_Offset)) # Sets the voltage offset
     
-    print("Generating sine wave at " + str(freq) + "MHz")
+    print("Generating sine wave at " + str(round(freq,3)) + "MHz")
     dwf.FDwfAnalogOutConfigure(hdwf, channel, c_int(1)) #This func configures/starts the device with the specified configuration.
     
     return 
