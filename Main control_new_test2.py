@@ -43,9 +43,9 @@ coordinate_top =  [43.28, 26.18, 43.62598]
 
 tube_length = coordinate_top[2] - coordinate_bottom[2]
 print("coordinate_bottom is " + str(coordinate_bottom) + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(round(tube_length, 3)))
-
-print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to: "+ str(coordinate_bottom))
 # =============================================================================
+# 
+# print("It is important that the GCTH has not been moved since last use because the camara could move in to the holder. The coodinate is set to: "+ str(coordinate_bottom))
 # user_input = input('Would you like to continue (y/n)')
 # 
 # if user_input.lower() == 'y':
@@ -54,15 +54,15 @@ print("It is important that the GCTH has not been moved since last use because t
 #     sys.exit('user typed "n" and the program will terminate now')
 # else:
 #     print('Type "y" or "n"')
+# 
+# if in_position == False:
+#     print("moving to starting position")
+#     MoveRelY(coordinate_bottom[1])
+#     MoveRelZ(coordinate_bottom[2])
+#     MoveRelX(coordinate_bottom[0])
+# 
+# print("The device is now in the starting position")
 # =============================================================================
-
-if in_position == False:
-    print("moving to starting position")
-    MoveRelY(coordinate_bottom[1])
-    MoveRelZ(coordinate_bottom[2])
-    MoveRelX(coordinate_bottom[0])
-
-print("The device is now in the starting position")
 
 #%%
 ###############################################################################
@@ -113,7 +113,7 @@ frequency = 1.91
 volts = [0.5, 0.75, 1]
 
 #start and stop frequencies for sweep
-sweep_int = [frequency - 0.1, frequency + 0.1]
+sweep_int = [frequency - 0.025, frequency + 0.025]
 step = 5
 sweep = np.linspace(sweep_int[0], sweep_int[1]+0.1, step)
 sweeper = 0
@@ -140,7 +140,7 @@ position = coordinate_bottom
 count = 0
 
 #wait times
-wait_time = 20
+wait_time = 25
 
 #creating statements
 background = True
@@ -153,6 +153,8 @@ position = [PositionX(), PositionY(), PositionZ()]
 file = open(str(first_folder_path) + "general data.txt", 'w')
 file.write("Temperature =" + str(temp) + ", humidity =" + str(humid) + ", Gain =" + str(gain) + ", Light =" + str(lamp) + ', Algae generation = ' + str(Alg_gen))
 file.close()
+
+print('Experiment is finished in approimately: ' + str(6*runs) + ' minutes')
 
 while run_count != runs:
     
@@ -201,10 +203,6 @@ while run_count != runs:
                 
                 break
         grabResult.Release()
-                
-        
-                
-        
 
     # Releasing the resource   
     out.release() 
@@ -231,6 +229,9 @@ while run_count != runs:
                 print("Now focusing...")
                 funcGen(freq=frequency, Amplitude=volts[count])
                 first = False
+                
+                if new_time > 10+current_time:
+                    funcStop()
             
             if current_time + wait_time < new_time:
                 funcStop()
@@ -293,7 +294,9 @@ while run_count != runs:
     
 camera.StopGrabbing()
 
-df = pd.DataFrame({'Background':frame_time_background, 'Frequency sweep':frame_time_sweep})
-df.to_csv('TimeStamps', sep=';', encoding='utf-8')
+df1 = pd.DataFrame({'Background':frame_time_background})
+df2 = pd.DataFrame({'Frequency sweep':frame_time_sweep})
+df1.to_csv('D:/Algae experiment/Time Stamps - back', sep=';', encoding='utf-8')
+df2.to_csv('D:/Algae experiment/Time Stamps - sweep', sep=';', encoding='utf-8')
 
 print("characterization of tube is done")

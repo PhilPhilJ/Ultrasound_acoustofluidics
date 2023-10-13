@@ -101,4 +101,4 @@ while camera.IsGrabbing():
 # Releasing the resource   
 out.release() 
 camera.StopGrabbing()
-
+funcStop()
