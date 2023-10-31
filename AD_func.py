@@ -18,6 +18,7 @@ sys.path.append('C:/Program Files (x86)/Digilent/WaveFormsSDK/samples/py')
 #sys.path.append('/Applications/WaveForms.app/Contents/Resources/SDK/samples/py')
 from ctypes import *
 from dwfconstants import *
+import numpy as np
 
 
 
@@ -153,6 +154,7 @@ def sweep(HzStart, HzStop, shape=funcSine, Amplitude=1, v_Offset=0, HzTime=5):
 
 def freqSweep(shape=funcSine,start=1.89,stop=1.93,by=2,Amplitude=1,v_Offset=0):  
     # 0 = the device will be configured only when calling FDwf###Configure - One can for instance just change the freq and everything else will automatically be configured
+    import time
     dwf.FDwfDeviceAutoConfigureSet(hdwf, c_int(0))
     
     dwf.FDwfAnalogOutNodeEnableSet(hdwf, channel, AnalogOutNodeCarrier, c_int(1))
@@ -163,7 +165,7 @@ def freqSweep(shape=funcSine,start=1.89,stop=1.93,by=2,Amplitude=1,v_Offset=0):
     frequencies = np.arange(start*10**6, stop*10**6+by*10**3, by*10**3)   # start and stop frequencies in MHz, the step frequency is in kHz
     
     for i in frequencies:
-        dwf.FDwfAnalogOutNodeFrequencySet(hdwf, channel, AnalogOutNodeCarrier, c_double(freq*10**6)) # Sets the frequency in Hz i.e. 1000 = 1kHz  
+        dwf.FDwfAnalogOutNodeFrequencySet(hdwf, channel, AnalogOutNodeCarrier, c_double(i*10**6)) # Sets the frequency in Hz i.e. 1000 = 1kHz  
         dwf.FDwfAnalogOutConfigure(hdwf, channel, c_int(1)) #This func configures/starts the device with the specified configuration.
         #######################################
         

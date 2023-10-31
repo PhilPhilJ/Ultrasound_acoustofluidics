@@ -38,8 +38,8 @@ print("The device is homed in all directions")
 ### Input the starting position (bottom position of the tube) and top position. Make sure the device has not been moved since
 ### last use.
 
-coordinate_bottom =  [43.28, 26.18, 28.9598]
-coordinate_top =  [43.28, 26.18, 43.62598]
+coordinate_bottom =  [44.52816, 25.84370, 27.64816]
+coordinate_top =  [44.56124, 25.84370, 41.72055]
 
 tube_length = coordinate_top[2] - coordinate_bottom[2]
 print("coordinate_bottom is " + str(coordinate_bottom) + "and coordinate_top is " + str(coordinate_top) + " and the tube length is " + str(round(tube_length, 3)))
@@ -55,14 +55,14 @@ print("coordinate_bottom is " + str(coordinate_bottom) + "and coordinate_top is 
 # else:
 #     print('Type "y" or "n"')
 # 
-# if in_position == False:
-#     print("moving to starting position")
-#     MoveRelY(coordinate_bottom[1])
-#     MoveRelZ(coordinate_bottom[2])
-#     MoveRelX(coordinate_bottom[0])
-# 
-# print("The device is now in the starting position")
-# =============================================================================
+if in_position == False:
+    print("moving to starting position")
+    MoveAbsY(coordinate_bottom[1])
+    MoveAbsZ(coordinate_bottom[2])
+    MoveAbsX(coordinate_bottom[0])
+
+print("The device is now in the starting position")
+#=============================================================================
 
 #%%
 ###############################################################################
@@ -93,29 +93,31 @@ fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
 ##other parameters
 temp = "24 C"
 humid = "19%"
-gain = "25 dB"
+gain = "20 dB"
 lamp = "10 V and 3.5 A"
 Alg_gen = '2.3'
 
 #Connect to analog discovery
 Connect()
+funcStop()
 
 #number of runs for characterization of tube. note that the tube length is given and one frame is 0.84 mm therefore the number 
 #should be tube_length/frame_height but could be more.
-move_length = 0.84
-runs = np.ceil(tube_length / move_length)
+move_length = 0.7
+runs = 20
 run_count = 0
+move_length_x = abs(coordinate_top[0] - coordinate_bottom[0])/runs #Move in x-direction for focus
 
 #frequency for focusing
 frequency = 1.91 
 
 #voltages for the tone generator
-volts = [0.5, 0.75, 1]
+volts = [1]
 
 #start and stop frequencies for sweep
 sweep_int = [frequency - 0.025, frequency + 0.025]
 step = 5
-sweep = np.linspace(sweep_int[0], sweep_int[1]+0.1, step)
+sweep = np.linspace(sweep_int[0], sweep_int[1], step)
 sweeper = 0
 frequency = sweep[sweeper]
 
@@ -140,7 +142,7 @@ position = coordinate_bottom
 count = 0
 
 #wait times
-wait_time = 25
+wait_time = 35
 
 #creating statements
 background = True
@@ -154,7 +156,7 @@ file = open(str(first_folder_path) + "general data.txt", 'w')
 file.write("Temperature =" + str(temp) + ", humidity =" + str(humid) + ", Gain =" + str(gain) + ", Light =" + str(lamp) + ', Algae generation = ' + str(Alg_gen))
 file.close()
 
-print('Experiment is finished in approimately: ' + str(6*runs) + ' minutes')
+print('Experiment is finished in approimately: ' + str(2*runs) + ' minutes')
 
 while run_count != runs:
     
@@ -170,7 +172,6 @@ while run_count != runs:
     
     roc_name = "backgroung_" + str(run_count + 1) + ".mp4"
     name_loc = second_folder_path + roc_name
-    print(name_loc)
     out = cv2.VideoWriter(name_loc, fourcc, FPS, size)
     start_time = time.time()
     
@@ -189,7 +190,7 @@ while run_count != runs:
                 print("making a background image over " +str(wait_time) + " s")
                 first = False
             
-            if current_time + wait_time < new_time:
+            if current_time + wait_time/2.5 < new_time:
                 
                 print("making a background done")
                 background = False
@@ -200,6 +201,7 @@ while run_count != runs:
                 file.write("The start- and end times are: " + str(start_time) + " " + str(end_time) +"\n") 
                 file.close()
                 current_time = time.time()
+                frame_time_background =np.append(frame_time_background, np.zeros(10))
                 
                 break
         grabResult.Release()
@@ -227,7 +229,7 @@ while run_count != runs:
             frame_time_sweep = np.append(frame_time_sweep, new_time)
             if first == True:
                 print("Now focusing...")
-                funcGen(freq=frequency, Amplitude=volts[count])
+                funcGen(freq=frequency, Amplitude=volts[0])
                 first = False
                 
                 if new_time > 10+current_time:
@@ -235,7 +237,7 @@ while run_count != runs:
             
             if current_time + wait_time < new_time:
                 funcStop()
-                print("Focusing at freguency: " + str(round(frequency,3)) + " MHz and amplitude: " + str(volts[count]) + " V")
+                print("Focusing at freguency: " + str(round(frequency,3)) + " MHz and amplitude: " + str(volts[0]) + " V")
                 first = True
                 count += 1
                 current_time = time.time()
@@ -250,10 +252,13 @@ while run_count != runs:
                         focus = False
                         move = True
                         sweeper = 0
+                        frequency = sweep[sweeper]
                         
                         file = open(str(second_folder_path) + "data.txt", 'a')
-                        file.write('Position =' + str(position) + "mm, Amplitudes =" + str(volts) + "V, Frequencies =" + str(sweep) + "MHz, wait time =" + str(wait_time) + "s" + ". Start time: " + str(start_time) + ". End time: " + str(end_time))
+                        file.write('Position =' + str(position) + "mm, Amplitudes =" + str(volts[0]) + "V, Frequencies =" + str(sweep) + "MHz, wait time =" + str(wait_time) + "s" + ". Start time: " + str(start_time) + ". End time: " + str(end_time))
                         file.close()
+                        
+                        frame_time_sweep =np.append(frame_time_sweep, np.zeros(10))
             
                         break
         grabResult.Release()
@@ -270,6 +275,7 @@ while run_count != runs:
         if first == True:
             print("Now moving to next position...")
             MoveRelZ(move_length)
+            MoveRelX(move_length_x)
             current_time = time.time()
             first = False
             
