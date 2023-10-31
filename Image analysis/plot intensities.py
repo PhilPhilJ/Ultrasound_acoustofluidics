@@ -10,16 +10,23 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider
+import pandas as pd
 
 # =============================================================================
 # vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/190923/Algae_Vid_exp_3_1909.mp4') #Loads the video
 # vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/190923/Algae_Vid_background_2_1909.mp4') #Loads the background video
 # =============================================================================
-vid = cv2.VideoCapture('/Users/joakimpihl/Downloads/Algae_Vid_exp_1.mp4') #Loads the video
-vid_back = cv2.VideoCapture('/Users/joakimpihl/Downloads/Algae_Vid_back_1.mp4') #Loads the background video
+vid = cv2.VideoCapture('/Volumes/Elements/Algae experiment 4/18_run/focus_18.mp4') #Loads the video
+vid_back = cv2.VideoCapture('/Volumes/Elements/Algae experiment 4/18_run/backgroung_18.mp4') #Loads the background video
+timestamps = pd.read_csv('/Volumes/Elements/Algae experiment 4/Time Stamps - sweep', delimiter=';')
+timestamps = timestamps['Frequency sweep'].tolist()
+timestamps = np.array(timestamps[1:len(timestamps)])
+timestamps = timestamps-timestamps[0]
+
+#%%
 #Define boundaries found using Image_crop_v3.py
-min_bound = 1250 #1405
-max_bound = 3050 #3545
+min_bound = 613 #1405
+max_bound = 2567 #3545
 mm_per_px = 400/(max_bound-min_bound) # um/px
 #Reads the fist frame
 ret, frame = vid.read()
@@ -45,6 +52,7 @@ for i in range(n_frames-1):
     frame_mean = np.mean(frame, axis=0)
     intensities = np.vstack([intensities, frame_mean])
 
+timestamps = timestamps[(len(timestamps)-n_frames):len(timestamps)]
 intensities = intensities[1:np.size(intensities,axis=0),:]
 mean_background = np.mean(background[1:np.size(background, axis=0)], axis=0)
 background = background[1:np.size(background, axis=0),:]
@@ -92,14 +100,16 @@ ax3.set_title('Mean background', fontsize='12.5')
 
 #plt.savefig('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/background_plots.png', dpi=300) #Save the plot
 #%%
-plt.close('all')
-plt.plot(np.arange(n_frames_back)/18, back_over_time)
-plt.title('Background intensity over time [2680:3050]', fontsize='20')
-plt.xlabel('Time [s]', fontsize='15')
-plt.ylabel('Intensity [0:255]', fontsize='15')
-
-plt.show()
-
+# =============================================================================
+# plt.close('all')
+# plt.plot(np.arange(n_frames_back)/18, back_over_time)
+# plt.title('Background intensity over time [2680:3050]', fontsize='20')
+# plt.xlabel('Time [s]', fontsize='15')
+# plt.ylabel('Intensity [0:255]', fontsize='15')
+# 
+# plt.show()
+# 
+# =============================================================================
 
 #%%
 plt.close('all')
@@ -163,19 +173,23 @@ del fig, ax1, ax2, ax3, ax4, plot_of_intensities, plot_of_intensities_2, Slider_
 plt.close('all')
 fig, ax = plt.subplots(figsize=(10,10))
 #img = ax.imshow(np.transpose(intensities_sub_back), cmap='viridis', extent=[0, n_frames/18, 0, (max_bound-min_bound)*mm_per_px], interpolation='nearest') #Play around with the cmaps to finde the best one
-img = ax.imshow(np.flipud(np.rot90(-1*I_rel)), cmap='plasma_r', extent=[0, np.ceil(n_frames/18), 0, (max_bound-min_bound)*mm_per_px], interpolation='nearest') #Play around with the cmaps to finde the best one
+img = ax.imshow(np.flipud(np.rot90(-1*I_rel)), cmap='plasma_r', extent=[timestamps[0], timestamps[len(timestamps)-1], 0, (max_bound-min_bound)*mm_per_px], interpolation='nearest') #Play around with the cmaps to finde the best one
 #img = ax.imshow(np.transpose(I_rel), cmap='viridis', extent=[0, np.ceil(n_frames/18), 0, (max_bound-min_bound)*mm_per_px], interpolation='nearest') #Play around with the cmaps to finde the best one
+ax.vlines(x=timestamps[int(n_frames/5)], ymin=0, ymax=(max_bound-min_bound)*mm_per_px)
+ax.vlines(x=timestamps[int(n_frames*2/5)], ymin=0, ymax=(max_bound-min_bound)*mm_per_px)
+ax.vlines(x=timestamps[int(n_frames*3/5)], ymin=0, ymax=(max_bound-min_bound)*mm_per_px)
+ax.vlines(x=timestamps[int(n_frames*4/5)], ymin=0, ymax=(max_bound-min_bound)*mm_per_px)
 ax.set_title('Some title', fontsize='25')
 ax.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
 ax.set_ylabel(r'Position [$\mathrm{\mu m}$]', fontsize='17.5')
-ax.set_aspect(0.075)
+ax.set_aspect(0.2)
 plt.rcParams.update({'font.size': 10})
 plt.colorbar(img, label='Relative drop in intensity', fraction=0.046, pad=0.04)
 
 #%%
 #3D plot
 plt.close('all')
-x = np.linspace(0,n_frames/18, n_frames)
+x = timestamps#np.linspace(0,n_frames/18, n_frames)
 y = np.linspace(0, (max_bound-min_bound)*mm_per_px, (max_bound-min_bound))
 X, Y = np.meshgrid(x,y, indexing='xy')
 #X = X[0:np.size(X,axis=0)-1,:]
