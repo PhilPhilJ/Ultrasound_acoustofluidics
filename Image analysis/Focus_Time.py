@@ -12,34 +12,47 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider, Button
 import pandas as pd
+from scipy.optimize import curve_fit
 
 #%%
 #Load video, background and timestamps for video
 exp_num = 5 #Choose experiment number
-vid_num = 10 #choose video number
+vid_num = 7 #choose video number
 ###
-vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/focus_'+str(vid_num)+'.mp4') #Loads the video
-vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/backgroung_'+str(vid_num)+'.mp4') #Loads the background video
-timestamps = pd.read_csv('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/Time Stamps - sweep.csv', delimiter=';')
-timestamps = timestamps['Frequency sweep'].tolist()
+# =============================================================================
+# vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/focus_'+str(vid_num)+'.mp4') #Loads the video
+# vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/backgroung_'+str(vid_num)+'.mp4') #Loads the background video
+# timestamps = pd.read_csv('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/Time Stamps - sweep.csv', delimiter=';')
+# timestamps = timestamps['Frequency sweep'].tolist()
+# timestamps = np.array(timestamps[1:len(timestamps)])
+# =============================================================================
+vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/DoubleFreqTest 1.885/run'+str(vid_num)+'.mp4') #Loads the video
+vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/DoubleFreqTest 1.885/runbackground.mp4') #Loads the background video
+timestamps = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/DoubleFreqTest 1.885/Time Stamps'+str(vid_num)+'.csv', delimiter=';', encoding='utf-8')
+timestamps = timestamps['Frame time'].tolist()
+freq = timestamps[0]
 timestamps = np.array(timestamps[1:len(timestamps)])
-
-
-########################################## Find start and end indeces for each video ##########################################
-indeces = np.array([0])
-n = 0
-
-for (i,j) in enumerate(timestamps):
-    if j == 0 and i > 0:
-        n += 1
-    if (n == 10) and (j != 0):
-        indeces = np.append(indeces, i-n)
-        indeces = np.append(indeces, i+1)
-        n = 0 
-########################################## Find start and end indeces for each video ##########################################
-
-timestamps = timestamps[indeces[2*vid_num-2]:indeces[2*vid_num-1]]
 timestamps = timestamps-timestamps[0]
+#%%
+########################################## Find start and end indeces for each video ##########################################
+# =============================================================================
+# indeces = np.array([0])
+# n = 0
+# 
+# for (i,j) in enumerate(timestamps):
+#     if j == 0 and i > 0:
+#         n += 1
+#     if (n == 10) and (j != 0):
+#         indeces = np.append(indeces, i-n)
+#         indeces = np.append(indeces, i+1)
+#         n = 0 
+# =============================================================================
+########################################## Find start and end indeces for each video ##########################################
+#%%
+# =============================================================================
+# timestamps = timestamps[indeces[2*vid_num-2]:indeces[2*vid_num-1]]
+# timestamps = timestamps-timestamps[0]
+# =============================================================================
 #%%
 #Crop image data 
 ####################################### Define functions start #######################################
@@ -140,7 +153,7 @@ background = background[1:np.size(background, axis=0),:]
 mean_background = np.mean(background, axis=0)
 
 intensities = intensities[1:np.size(intensities,axis=0),:]
-#timestamps = timestamps[1:len(timestamps)]
+timestamps = timestamps[1:len(timestamps)]
 
 #Cleaning up memory
 if 'vid' in globals():
@@ -240,14 +253,16 @@ plt.close('all')
 fig, ax = plt.subplots(figsize=(10,10))
 img = ax.imshow(np.flipud(np.rot90(I_rel)), cmap='plasma_r', extent=[timestamps[0], timestamps[-1], 0, 400], interpolation='nearest') 
 ######################################### Vertical lines where diff. videos start #########################################
-ax.vlines(x=int(timestamps[-1]/5), ymin=0, ymax=400)
-ax.vlines(x=int(timestamps[-1]*2/5), ymin=0, ymax=400)
-ax.vlines(x=int(timestamps[-1]*3/5), ymin=0, ymax=400)
-ax.vlines(x=int(timestamps[-1]*4/5), ymin=0, ymax=400)
+# =============================================================================
+# ax.vlines(x=int(timestamps[-1]/5), ymin=0, ymax=400)
+# ax.vlines(x=int(timestamps[-1]*2/5), ymin=0, ymax=400)
+# ax.vlines(x=int(timestamps[-1]*3/5), ymin=0, ymax=400)
+# ax.vlines(x=int(timestamps[-1]*4/5), ymin=0, ymax=400)
+# =============================================================================
 ax.set_title('Some title', fontsize='25')
 ax.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
 ax.set_ylabel(r'Position [$\mathrm{\mu m}$]', fontsize='17.5')
-ax.set_aspect(0.25)
+ax.set_aspect(0.05)
 plt.rcParams.update({'font.size': 10})
 plt.colorbar(img, label='Relative drop in intensity', fraction=0.046, pad=0.04)
 
@@ -273,52 +288,109 @@ fig.colorbar(img3d, label='Relative drop in intensity', fraction=0.046, pad=0.04
 
 #%%
 #Define alpha region - The region which algae are focused into
-alpha = 0.15
+alpha = 0.20
 I_norm = np.empty([0])
+delta = 0 #How much to skew/offcet alpha region
+
+s1 = np.array([0, int(np.ceil((1/2*(1-alpha))*np.size(intensities, axis=1)))])
+s2 = np.array([int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities,axis=1))), -1])
 
 #Define max intensity - Max value is defined to be the mean of the background video intensity
-I_0 = np.sum(intensities_sub_back[0,0:int(np.ceil((1/2*(1-alpha))*np.size(intensities_sub_back, axis=1)))]) + np.sum(intensities_sub_back[0,int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities_sub_back,axis=1))):-1])
-I_max = np.sum(intensities_sub_back[-1,0:int(np.ceil((1/2*(1-alpha))*np.size(intensities_sub_back, axis=1)))]) + np.sum(intensities_sub_back[-1,int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities_sub_back,axis=1))):-1])
+I_0 = np.sum(intensities[0,s1[0]:(s1[1]+delta)]) + np.sum(intensities[0,(s2[0]-delta):s2[1]])
+I_max = np.sum(intensities[-1,s1[0]:(s1[1]+delta)]) + np.sum(intensities[-1,(s2[0]-delta):s2[1]])
 
 
 #For each timestamp figure out the intensity the intensity relative to I_max
 for (i,j) in enumerate(timestamps):
-    if i < np.size(intensities_sub_back,axis=0):
-        i_1 = np.sum(intensities_sub_back[i, 0:int(np.ceil((1/2*(1-alpha))*np.size(intensities_sub_back, axis=1)))])
-        i_2 = np.sum(intensities_sub_back[i, int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities_sub_back,axis=1))):-1])
+    if i < np.size(intensities,axis=0):
+        i_1 = np.sum(intensities[i, 0:(s1[1]+delta)])
+        i_2 = np.sum(intensities[i, int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities,axis=1))):-1])
         
         I_t = np.sum([i_1, i_2])
         I_norm = np.append(I_norm, I_t/I_max)
 
-# =============================================================================
-# R = 1-I_0/I_max
-# print(R)
-# =============================================================================
+R = 1-I_0/I_max
+k = np.pi*(1-alpha)/2
+
 #%%
 plt.close('all')
 fig, ax = plt.subplots(figsize=(10,10))
 ax.plot(timestamps, I_norm, 'o')
-plt.ylim([0.9*min(I_norm),1.1*max(I_norm)])
+plt.ylim([0.999*min(I_norm),1.001*max(I_norm)])
 
 ax.set_title('Some title', fontsize='25')
 ax.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
 ax.set_ylabel(r'$\frac{I}{I_{max}}$', fontsize='17.5')
 
+I_norm_max = np.mean(I_norm[-5:-1])
+
+
+ax.hlines(y=I_norm_max*0.9999, xmin=0, xmax=timestamps[-1])
+
+
+
 ######################################### Vertical lines where diff. videos start #########################################
-ax.vlines(x=int(timestamps[-1]/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
-ax.vlines(x=int(timestamps[-1]*2/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
-ax.vlines(x=int(timestamps[-1]*3/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
-ax.vlines(x=int(timestamps[-1]*4/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
+# =============================================================================
+# ax.vlines(x=int(timestamps[-1]/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
+# ax.vlines(x=int(timestamps[-1]*2/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
+# ax.vlines(x=int(timestamps[-1]*3/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
+# ax.vlines(x=int(timestamps[-1]*4/5), ymin=0.9*min(I_norm), ymax=1.1*max(I_norm))
+# =============================================================================
 
 #%%
 fig2, ax2 = plt.subplots(figsize=(10,10))
 img = ax2.imshow(np.flipud(np.rot90(I_rel)), cmap='plasma_r', extent=[timestamps[0], timestamps[-1], 0, 400], interpolation='nearest') 
+
 ######################################### Horizontal lines where diff. videos start #########################################
-ax2.hlines(y=int(np.ceil((1/2*(1-alpha))*np.size(intensities_sub_back, axis=1)*mm_per_px)), xmin=timestamps[0], xmax=timestamps[-1])
-ax2.hlines(y=int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities_sub_back,axis=1)*mm_per_px)), xmin=timestamps[0], xmax=timestamps[-1])
+ax2.hlines(y=(s1[1]+delta)*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
+ax2.hlines(y=(s2[0]+delta)*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
 ax2.set_title('Some title', fontsize='25')
 ax2.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
 ax2.set_ylabel(r'Position [$\mathrm{\mu m}$]', fontsize='17.5')
-ax2.set_aspect(0.25)
+ax2.set_aspect(0.05)
 plt.rcParams.update({'font.size': 10})
 plt.colorbar(img, label='Relative drop in intensity', fraction=0.046, pad=0.04)
+#%%
+def func(t, t_star):
+    return 1-R/k*np.arctan(np.tan(k)*np.exp(-t/t_star))
+
+popt, pcov = curve_fit(func, timestamps, I_norm)
+
+t_star = popt[0]
+
+
+ydata = 1-R/k*np.arctan(np.tan(k)*np.exp(-np.linspace(0, timestamps[-1],1000)/t_star)) 
+
+
+#%%
+plt.close('all')
+fig, ax = plt.subplots(figsize=(10,10))
+ax.plot(np.linspace(0, timestamps[-1],1000), ydata, 'k--')
+ax.plot(timestamps, I_norm, 'or')
+
+ax.set_title('Some title', fontsize='25')
+ax.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
+ax.set_ylabel(r'$\frac{I}{I_{max}}$', fontsize='17.5')
+
+
+
+
+
+
+
+
+
+
+
+
+
+#%%
+kappa = 0.999
+index = np.empty(1)
+
+for i,j in enumerate(I_norm):
+    if j > kappa*max(I_norm) and len(index)<3:
+        index = np.append(index, i)
+    elif j>kappa and len(index)==3:
+        focus_time = timestamps[index[-1]]-timestamps[0]
+        
