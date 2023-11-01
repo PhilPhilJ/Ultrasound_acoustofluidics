@@ -13,11 +13,12 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider, Button
 import pandas as pd
 from scipy.optimize import curve_fit
+from scipy import stats
 
 #%%
 #Load video, background and timestamps for video
 exp_num = 5 #Choose experiment number
-vid_num = 0 #choose video number
+vid_num = 5 #choose video number
 ###
 # =============================================================================
 # vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/focus_'+str(vid_num)+'.mp4') #Loads the video
@@ -359,7 +360,7 @@ popt, pcov = curve_fit(func, timestamps, I_norm)
 t_star = popt[0]
 
 xdata_time = np.linspace(0, timestamps[-1], 1000)
-ydata = 1-R/k*np.arctan(np.tan(k)*np.exp(-xdata_time/t_star)) 
+ydata = func(xdata_time, popt)
 
 
 #%% 
@@ -372,10 +373,29 @@ ss_tot = np.sum((I_norm-np.mean(I_norm))**2) #Total sum of squares
 r_squared = 1 - (ss_res / ss_tot) #R squared of fit
 
 #%%
+#Find the prediction interval 100(1-a)% of the time time the PI will contain the ydata
+a = 0.9998 #alpha level
+n = len(I_norm) #number of observations
+p = len(popt) #number of parameters
+dof = n-2 #Degrees of freedom
+
+t_ahalf = stats.t.ppf(a/2, dof) 
+uL = np.empty(0)
+lL = np.empty(0)
+
+Sxx = np.sum((xdata_time-np.mean(xdata_time))**2)
+
+for i,j in enumerate(xdata_time):
+    uL = np.append(uL, ydata[i] + t_ahalf* np.sqrt(1 + 1/n + ((j-np.mean(xdata_time))**2)/Sxx))
+    lL = np.append(lL, ydata[i] - t_ahalf* np.sqrt(1 + 1/n + ((j-np.mean(xdata_time))**2)/Sxx))  
+
+
+#%%
 plt.close('all')
 fig, ax = plt.subplots(figsize=(10,10))
 ax.plot(np.linspace(0, timestamps[-1],1000), ydata, 'k--')
 ax.plot(timestamps, I_norm, 'or')
+ax.fill_between(xdata_time, lL, uL, color = 'black', alpha = 0.15)
 
 ax.set_title('Normalized intensity vs. time (frequency [MHz]: '+str(freq)+')', fontsize='25')
 ax.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
@@ -390,6 +410,8 @@ for i,j in enumerate(ydata):
 
 #%%
 
-df = pd.DataFrame({'Frequency':[freq], 'Focusing time (99%)':[focus_time],'t_star':[t_star], 'alpha':[alpha], 'R':[R], 'r_squared':r_squared})
-#df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Resonance freq - Exp 1/Resonance freq - Exp 1.csv', sep=';')
-df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Resonance freq - Exp 1/Resonance freq - Exp 1.csv', sep=';')
+# =============================================================================
+# df = pd.DataFrame({'Frequency':[freq], 'Focusing time (99%)':[focus_time],'t_star':[t_star], 'alpha':[alpha], 'R':[R], 'r_squared':r_squared})
+# #df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Resonance freq - Exp 1/Resonance freq - Exp 1.csv', sep=';')
+# df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Resonance freq - Exp 1/Resonance freq - Exp 1.csv', sep=';')
+# =============================================================================
