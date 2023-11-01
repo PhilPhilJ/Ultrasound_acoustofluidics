@@ -33,9 +33,9 @@ converter = pylon.ImageFormatConverter()
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-run = "background"
-frequencies = np.linspace(1.86, 1.91, 11 )
-frequency = 2
+run = 16
+frequencies = np.linspace(1.85, 1.93, 17 )
+frequency = frequencies[run]
 
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
@@ -53,7 +53,7 @@ Voltage = 2
 the_time = time.time()
 
 file = open('C:/Users/s102772/Desktop/DoubleFreqTest/info' + str(run) +'.txt', 'w')
-file.write("Temperature =" + str(temp) + ", humidity =" + str(humid) + ", Gain =" + str(gain) + ", Light =" + str(lamp) + ', Algae generation = ' + str(Alg_gen) + ". The starting time is: " + str(the_time) + ". The voltage is: " +str(Voltage))
+file.write("Temperature =" + str(temp) + ", humidity =" + str(humid) + ", Gain =" + str(gain) + ", Light =" + str(lamp) + ', Algae generation = ' + str(Alg_gen) + ". The starting time is: " + str(the_time) + ". The voltage is: " +str(Voltage) + ". Frequency = " +str(frequencies[run]))
 file.close()
 
 frame_time = np.empty([1])
