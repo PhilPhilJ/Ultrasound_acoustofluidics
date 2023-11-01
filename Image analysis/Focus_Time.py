@@ -17,7 +17,7 @@ from scipy.optimize import curve_fit
 #%%
 #Load video, background and timestamps for video
 exp_num = 5 #Choose experiment number
-vid_num = 7 #choose video number
+vid_num = 0 #choose video number
 ###
 # =============================================================================
 # vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/focus_'+str(vid_num)+'.mp4') #Loads the video
@@ -358,9 +358,18 @@ popt, pcov = curve_fit(func, timestamps, I_norm)
 
 t_star = popt[0]
 
+xdata_time = np.linspace(0, timestamps[-1], 1000)
+ydata = 1-R/k*np.arctan(np.tan(k)*np.exp(-xdata_time/t_star)) 
 
-ydata = 1-R/k*np.arctan(np.tan(k)*np.exp(-np.linspace(0, timestamps[-1],1000)/t_star)) 
 
+#%% 
+#Find R^2
+residuals = I_norm - func(timestamps, popt) #Find residual
+ss_res = np.sum(residuals**2) #Find residual sum of squares
+
+ss_tot = np.sum((I_norm-np.mean(I_norm))**2) #Total sum of squares
+
+r_squared = 1 - (ss_res / ss_tot) #R squared of fit
 
 #%%
 plt.close('all')
@@ -368,29 +377,19 @@ fig, ax = plt.subplots(figsize=(10,10))
 ax.plot(np.linspace(0, timestamps[-1],1000), ydata, 'k--')
 ax.plot(timestamps, I_norm, 'or')
 
-ax.set_title('Some title', fontsize='25')
+ax.set_title('Normalized intensity vs. time (frequency [MHz]: '+str(freq)+')', fontsize='25')
 ax.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
 ax.set_ylabel(r'$\frac{I}{I_{max}}$', fontsize='17.5')
 
+focus_time = 0
 
-
-
-
-
-
-
-
-
-
+for i,j in enumerate(ydata):
+    if focus_time == 0 and j >= 0.9999*max(ydata):
+        focus_time = xdata_time[i]
 
 
 #%%
-kappa = 0.999
-index = np.empty(1)
 
-for i,j in enumerate(I_norm):
-    if j > kappa*max(I_norm) and len(index)<3:
-        index = np.append(index, i)
-    elif j>kappa and len(index)==3:
-        focus_time = timestamps[index[-1]]-timestamps[0]
-        
+df = pd.DataFrame({'Frequency':[freq], 'Focusing time (99%)':[focus_time],'t_star':[t_star], 'alpha':[alpha], 'R':[R], 'r_squared':r_squared})
+#df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Resonance freq - Exp 1/Resonance freq - Exp 1.csv', sep=';')
+df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Resonance freq - Exp 1/Resonance freq - Exp 1.csv', sep=';')
