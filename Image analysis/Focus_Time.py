@@ -18,7 +18,8 @@ from scipy import stats
 #%%
 #Load video, background and timestamps for video
 exp_num = 5 #Choose experiment number
-vid_num = 5 #choose video number
+vid_num = 13 #choose video number - look at vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
+t_0 = 4 #np.array([]) # time that focussing starts - vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
 ###
 # =============================================================================
 # vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Algae experiment '+str(exp_num)+'/'+str(vid_num)+'_run/focus_'+str(vid_num)+'.mp4') #Loads the video
@@ -27,13 +28,14 @@ vid_num = 5 #choose video number
 # timestamps = timestamps['Frequency sweep'].tolist()
 # timestamps = np.array(timestamps[1:len(timestamps)])
 # =============================================================================
-vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/DoubleFreqTest 1.885/run'+str(vid_num)+'.mp4') #Loads the video
-vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/DoubleFreqTest 1.885/runbackground.mp4') #Loads the background video
-timestamps = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/DoubleFreqTest 1.885/Time Stamps'+str(vid_num)+'.csv', delimiter=';', encoding='utf-8')
+vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run'+str(vid_num)+'.mp4') #Loads the video
+vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run0.mp4') #Loads the background video
+timestamps = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/Time Stamps'+str(vid_num)+'.csv', delimiter=';', encoding='utf-8')
 timestamps = timestamps['Frame time'].tolist()
 freq = timestamps[0]
 timestamps = np.array(timestamps[1:len(timestamps)])
 timestamps = timestamps-timestamps[0]
+timestamps = timestamps-t_0
 #%%
 ########################################## Find start and end indeces for each video ##########################################
 # =============================================================================
@@ -67,19 +69,27 @@ def assign_min(event): #A function that assigns the threshold value given by the
     global index_left_side
     index_left_side = globals()['slider_val']
     print('The min threshold has been set to: ' + str(round(index_left_side,0)))
-    if 'index_right_side' in globals():
+    if 'index_right_side' in globals() and 'focus_point' in globals():
         plt.close(fig)
 
 def assign_max(event): #A function that assigns the threshold value given by the slider
     global index_right_side
     index_right_side = globals()['slider_val']
     print('The max threshold has been set to: ' + str(round(index_right_side,0)))
-    if 'index_left_side' in globals():
+    if 'index_left_side' in globals() and 'focus_point' in globals():
+        plt.close(fig)
+        
+def assign_mid(event): #A function that assigns the threshold value given by the slider
+    global focus_point
+    focus_point = globals()['slider_val']
+    print('The channel focuspoint has been set to: ' + str(round(focus_point,0)))
+    if 'index_left_side' in globals() and 'index_right_side' in globals():
         plt.close(fig)
 ####################################### Define functions end #######################################
 
 #Reads the fist frame
-ret, frame = vid_back.read()
+vid.set(cv2.CAP_PROP_POS_FRAMES, int(vid.get(cv2.CAP_PROP_FRAME_COUNT)*0.75))
+ret, frame = vid.read()
 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Converts the frame to grayscale
 frame_length = np.size(frame, axis=0)
 
@@ -110,16 +120,21 @@ pos_slider.on_changed(update)
 # Create a `matplotlib.widgets.Button` to accept the slider value.
 min_val = fig.add_axes([0.0125, 0.05, 0.1, 0.04])
 max_val = fig.add_axes([0.875, 0.05, 0.1, 0.04])
+mid_val = fig.add_axes([0.45, 0.9, 0.1, 0.04])
 button_min = Button(min_val, 'Min', hovercolor='0.975')
 button_max = Button(max_val, 'Max', hovercolor='0.975')
+button_mid = Button(mid_val, 'Mid', hovercolor='0.975')
 
 button_min.on_clicked(assign_min)
 button_max.on_clicked(assign_max)
+button_mid.on_clicked(assign_mid)
 
 #%%
+vid.set(cv2.CAP_PROP_POS_FRAMES, int(0))
 #Define boundaries 
 min_bound = int(round(index_left_side,0))
 max_bound = int(round(index_right_side,0))
+focus_point = int(focus_point-min_bound)
 mm_per_px = 400/(max_bound-min_bound) # conversion factor: um/px
 
 ###################################### Generate background and intensity matrix ######################################
@@ -291,21 +306,22 @@ fig.colorbar(img3d, label='Relative drop in intensity', fraction=0.046, pad=0.04
 #Define alpha region - The region which algae are focused into
 alpha = 0.20
 I_norm = np.empty([0])
-delta = 0 #How much to skew/offcet alpha region
+w = np.size(intensities,axis=1) # width of channel
 
-s1 = np.array([0, int(np.ceil((1/2*(1-alpha))*np.size(intensities, axis=1)))])
-s2 = np.array([int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities,axis=1))), -1])
+#s1 = np.array([0, int(np.ceil((1/2*(1-alpha))*np.size(intensities, axis=1)) - )]) #Index for section 1 going from px 0 to w/2-w*(1-alpha/2)
+s1 = np.array([0, int(np.ceil(focus_point-alpha*w/2))]) #Index for section 1 going from px 0 to w/2-w*(1-alpha/2)
+s2 = np.array([int(np.ceil(focus_point+alpha*w/2)), -1])
 
 #Define max intensity - Max value is defined to be the mean of the background video intensity
-I_0 = np.sum(intensities[0,s1[0]:(s1[1]+delta)]) + np.sum(intensities[0,(s2[0]-delta):s2[1]])
-I_max = np.sum(intensities[-1,s1[0]:(s1[1]+delta)]) + np.sum(intensities[-1,(s2[0]-delta):s2[1]])
+I_0 = np.sum(intensities[0,s1[0]:(s1[1])]) + np.sum(intensities[0,(s2[0]):s2[1]])
+I_max = np.sum(intensities[-1,s1[0]:(s1[1])]) + np.sum(intensities[-1,(s2[0]):s2[1]])
 
 
 #For each timestamp figure out the intensity the intensity relative to I_max
 for (i,j) in enumerate(timestamps):
     if i < np.size(intensities,axis=0):
-        i_1 = np.sum(intensities[i, 0:(s1[1]+delta)])
-        i_2 = np.sum(intensities[i, int(np.ceil((1/2*(1-alpha)+alpha)*np.size(intensities,axis=1))):-1])
+        i_1 = np.sum(intensities[i, s1[0]:s1[1]])
+        i_2 = np.sum(intensities[i, s2[0]:s2[1]])
         
         I_t = np.sum([i_1, i_2])
         I_norm = np.append(I_norm, I_t/I_max)
@@ -343,8 +359,8 @@ fig2, ax2 = plt.subplots(figsize=(10,10))
 img = ax2.imshow(np.flipud(np.rot90(I_rel)), cmap='plasma_r', extent=[timestamps[0], timestamps[-1], 0, 400], interpolation='nearest') 
 
 ######################################### Horizontal lines where diff. videos start #########################################
-ax2.hlines(y=(s1[1]+delta)*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
-ax2.hlines(y=(s2[0]+delta)*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
+ax2.hlines(y=(w-s1[1])*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
+ax2.hlines(y=s2[0]*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
 ax2.set_title('Some title', fontsize='25')
 ax2.set_xlabel(r'Time [$\mathrm{s}$]', fontsize='17.5')
 ax2.set_ylabel(r'Position [$\mathrm{\mu m}$]', fontsize='17.5')
