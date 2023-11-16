@@ -22,7 +22,7 @@ fps = int(input_video.get(cv2.CAP_PROP_FPS))
 
 # Set up the output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-output_video = cv2.VideoWriter(r"C:\Users\Phili\OneDrive - Danmarks Tekniske Universitet\Bachelorprojekt\Videoer\Algae_Vid_6cropped.mp4",fourcc, fps, (x2 - x1, y2 - y1))
+output_video = cv2.VideoWriter(r"C:\Users\Phili\OneDrive - Danmarks Tekniske Universitet\Bachelorprojekt\Videoer\Algae_Vid_6cropped.mp4",fourcc, fps, (x2 - x1, y2 - y1), False)
 
 # Process the video frames
 while True:
