@@ -19,9 +19,10 @@ import os
 
 #Load video, background and timestamps for video
 vid_num = 6 #choose video number - look at vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
-t_0 = 5.3 #np.array([]) # time that focussing starts - vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
+t_0 = 0 #np.array([]) # time that focussing starts - vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
 
-vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run'+str(vid_num)+'.mp4') #Loads the video
+#vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run'+str(vid_num)+'.mp4') #Loads the video
+vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep 2 sub back/run8cropsubback.mp4') #Loads the video
 vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run0.mp4') #Loads the background video
 timestamps = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/Time Stamps'+str(vid_num)+'.csv', delimiter=';', encoding='utf-8')
 timestamps = timestamps['Frame time'].tolist()
@@ -30,15 +31,18 @@ timestamps = np.array(timestamps[1:len(timestamps)])
 timestamps = timestamps-timestamps[0]
 timestamps = timestamps-t_0
 
-index_left_side = 1370
-index_right_side = 3078
+index_left_side = 0
+index_right_side = 0
+
+ret, frame = vid.read()#Reads the fist frame
+frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 #%%
 #Define boundaries 
 min_bound = int(round(index_left_side,0))
 max_bound = int(round(index_right_side,0))
-focus_point = 660 #Index compared to min bound
+focus_point = 1100 #Index compared to min bound
 t_index_0 = np.where(np.isclose(timestamps, 0, atol=0.1))
-mm_per_px = 400/(max_bound-min_bound) # conversion factor: um/px
+mm_per_px = 0.2#400/(max_bound-min_bound) # conversion factor: um/px
 
 ###################################### Generate background and intensity matrix ######################################
 ret, frame = vid.read()#Reads the fist frame
@@ -73,11 +77,11 @@ mean_background = np.mean(background, axis=0)
 
 intensities = intensities[1:np.size(intensities,axis=0),:]
 timestamps = timestamps[1:len(timestamps)]
-
+#%%
 #Cleaning up memory
 if 'vid' in globals():
     del frame, ret, ret_2, frame_mean, back_frame, back_frame_mean, vid, vid_back
-
+#%%
 intensities_sub_back = intensities - mean_background #Intensities subtracted background
 I_rel = (-1)*intensities_sub_back/mean_background
 # =============================================================================
@@ -152,7 +156,7 @@ ax.hlines(y=1-R, xmin=0, xmax=timestamps[-1])
 
 fig2, ax2 = plt.subplots(figsize=(10,10))
 img = ax2.imshow(np.flipud(np.rot90(I_rel)), cmap='plasma_r', extent=[timestamps[0], timestamps[-1], 0, 400], interpolation='nearest') 
-
+#%%
 ######################################### Horizontal lines where diff. videos start #########################################
 ax2.hlines(y=(w-s1[1])*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
 ax2.hlines(y=s2[0]*mm_per_px, xmin=timestamps[0], xmax=timestamps[-1])
