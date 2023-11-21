@@ -16,12 +16,12 @@ from scipy.optimize import curve_fit
 import os
 
 # Paths to files
-#vid_num = 15 #Video 0 through 15
-
-for vid_num in range(16):
-    path_vid = '/Users/joakimpihl/Desktop/Videos/4 - background (bw)/run'+ str(vid_num)+'.mp4'
-    path_imp_times = '/Users/joakimpihl/Desktop/Videos/Focus sweep 4/Important times'+str(vid_num)+'.csv'
-    path_times = '/Users/joakimpihl/Desktop/Videos/Focus sweep 4/Time Stamps'+str(vid_num)+'.csv'
+#vid_num = 15 #Video 0 through 52
+path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 5/'
+for vid_num in range(53):
+    path_vid = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 5 edited/run'+ str(vid_num)+'.mp4'
+    path_imp_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 5 edited/Important times'+str(vid_num)+'.csv'
+    path_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 5 edited/Time Stamps'+str(vid_num)+'.csv'
     
     # Load files
     vid = cv2.VideoCapture(path_vid)
@@ -94,7 +94,7 @@ for vid_num in range(16):
     #Define max intensity - Max value is defined to be the sum of mean intensities of the last frame
     I_0 = np.sum(intensities[t_index_0,s1[0]:s1[1]]) + np.sum(intensities[t_index_0,s2[0]:s2[1]]) # Intensity when focussing was started
     I_max = np.sum(intensities[-1,s1[0]:s1[1]]) + np.sum(intensities[-1,s2[0]:s2[1]]) # Max intensity
-    #R = 1 - I_0/I_max # Relative reduction in intensity
+    R_data = 1 - I_0/I_max # Relative reduction in intensity
     k = np.pi*(1-alpha)/2 #Defining a constant k
     
     #For each timestamp figure out the intensity the intensity relative to I_max
@@ -112,17 +112,17 @@ for vid_num in range(16):
     
     popt, pcov = curve_fit(func, timestamps[t_index_0:t_index_end+1], I_norm[t_index_0:t_index_end+1]) #Fitting
     t_star = popt[0] #Defining the best value of the fitting parameter
-    R = popt[1] #Also fitting for R
+    R_fit = popt[1] #Also fitting for R
     
     #Generate fitting data to overlay experimental data
     xdata_time = np.linspace(timestamps[0], timestamps[-1], 1000)
     ydata = func(xdata_time, *popt)
     
     #Make plot of experimental data and plot
-    delta_y=R/(1-alpha)
+    delta_y=R_fit/(1-alpha)
     plt.close('all')
     fig, ax = plt.subplots(figsize=(10,7.5))
-    ax.hlines(y=1-R/(1-alpha), xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
+    ax.hlines(y=1-R_fit/(1-alpha), xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
     ax.hlines(y=1, xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
     ax.plot(timestamps, I_norm, 'or')
     ax.plot(xdata_time, ydata, 'k--')
@@ -141,11 +141,11 @@ for vid_num in range(16):
     ax.legend(['Fit', 'Data'], loc='lower right', fontsize='15')
     
     
-    plt.savefig('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep 4  - Plots/No background (BW)/run '+str(vid_num)+' freq. '+str(round(freq,3))+' MHz.png', dpi=300, bbox_inches='tight')
+    plt.savefig(path_out + 'Plots/run '+str(vid_num)+' freq. '+str(round(freq, 3))+' MHz.png', dpi=300, bbox_inches='tight')
     
-    df = pd.DataFrame({'Frequency (MHz)':[freq], 'Focusing time (99.99%)':[focus_time],'t_star':[t_star], 'alpha':[alpha], 'R':[R]})
+    df = pd.DataFrame({'Frequency (MHz)':[freq], 'Focusing time (99.99%)':[focus_time],'t_star':[t_star], 'alpha':[alpha], 'R (Fit)':[R_fit], 'R (Data)':[R_data]})
     
-    if os.path.exists('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep 4  - Plots/No background (BW)/Resonance freq - Exp 4.csv') != True:
-        df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep 4  - Plots/No background (BW)/Resonance freq - Exp 4.csv', sep=';')
+    if os.path.exists(path_out + 'Resonance freq.csv') != True:
+        df.to_csv(path_out + 'Resonance freq.csv', sep=',')
     else:
-        df.to_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep 4  - Plots/No background (BW)/Resonance freq - Exp 4.csv', sep=';', header=False, mode='a')
+        df.to_csv(path_out + 'Resonance freq.csv', sep=',', header=False, mode='a')

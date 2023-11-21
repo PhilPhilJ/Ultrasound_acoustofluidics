@@ -18,7 +18,7 @@ from scipy import stats
 #%%
 #Load video, background and timestamps for video
 exp_num = 5 #Choose experiment number
-vid_num = 13 #choose video number - look at vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
+vid_num = 0 #choose video number - look at vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
 t_0 = 4 #np.array([]) # time that focussing starts - vid 0,1,2,6,7,8,9,10,11,12,13,14,15 for now
 ###
 # =============================================================================
@@ -28,14 +28,14 @@ t_0 = 4 #np.array([]) # time that focussing starts - vid 0,1,2,6,7,8,9,10,11,12,
 # timestamps = timestamps['Frequency sweep'].tolist()
 # timestamps = np.array(timestamps[1:len(timestamps)])
 # =============================================================================
-vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run'+str(vid_num)+'.mp4') #Loads the video
+vid = cv2.VideoCapture('/Users/joakimpihl/Desktop/Sweep 5 videoer/Focus sweep 5 lower/run'+str(vid_num)+'.mp4') #Loads the video
 vid_back = cv2.VideoCapture('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/run0.mp4') #Loads the background video
-timestamps = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/Time Stamps'+str(vid_num)+'.csv', delimiter=';', encoding='utf-8')
-timestamps = timestamps['Frame time'].tolist()
-freq = timestamps[0]
-timestamps = np.array(timestamps[1:len(timestamps)])
-timestamps = timestamps-timestamps[0]
-timestamps = timestamps-t_0
+#timestamps = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Focus sweep/Time Stamps'+str(vid_num)+'.csv', delimiter=';', encoding='utf-8')
+#timestamps = timestamps['Frame time'].tolist()
+#freq = timestamps[0]
+#timestamps = np.array(timestamps[1:len(timestamps)])
+#timestamps = timestamps-timestamps[0]
+#timestamps = timestamps-t_0
 #%%
 ########################################## Find start and end indeces for each video ##########################################
 # =============================================================================
@@ -91,7 +91,7 @@ def assign_mid(event): #A function that assigns the threshold value given by the
 vid.set(cv2.CAP_PROP_POS_FRAMES, int(vid.get(cv2.CAP_PROP_FRAME_COUNT)*0.75))
 ret, frame = vid.read()
 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Converts the frame to grayscale
-frame_length = np.size(frame, axis=0)
+frame_length = np.size(frame, axis=1)
 
 ####################################### Plotting intensities overlayed image of channel #######################################
 fig, ax1 = plt.subplots()
