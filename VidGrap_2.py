@@ -17,6 +17,8 @@ from AD_func import *
 #from frameCut import *
 import numpy as np
 import pandas as pd
+import os
+from Valve_control import switchvalve
 
 print('Press ESC to close the window')
 
@@ -25,23 +27,27 @@ camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 
 # Grabing Continusely (video) with minimal delay
 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
-camera.AcquisitionFrameRate.SetValue(4);
-camera.AcquisitionFrameRateEnable.SetValue(True); 
+#camera.AcquisitionFrameRate.SetValue(100);
+#camera.AcquisitionFrameRateEnable.SetValue(True); 
 converter = pylon.ImageFormatConverter()
 
 # converting to opencv bgr format
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-run = 16
-frequencies = np.linspace(1.84, 1.94, 17 )
-frequency = frequencies[run]
+newpath = r"D:\Canal sweeps\amps\position_1_211123"
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
+
+run = 4
+frequencies = np.linspace(1.884, 1.906, 31 )
+frequency = 1.8972#frequencies[run]
 
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
-size = (4504, 4504) # Camera resoloution: 4504x4504px, FPS: 18
-FPS = 4 # Frames per second of camera
+size = (1440, 1080) # Camera resoloution: 4504x4504px, FPS: 18
+FPS = 20 # Frames per second of camera
 fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
-out = cv2.VideoWriter('C:/Users/s102772/Desktop/DoubleFreqTest/run' + str(run) +'.mp4', fourcc, FPS, size, False) #Change path to saved location
+out = cv2.VideoWriter(newpath +"/run" + str(run) +'.mp4', fourcc, FPS, size, False) #Change path to saved location
 
 ##other parameters
 temp = "24 C"
@@ -49,10 +55,11 @@ humid = "19%"
 gain = "10 dB"
 lamp = "10 V and 3.5 A"
 Alg_gen = '2.3'
-Voltage = 1
+volts = np.linspace(0.5,5,10)
+Voltage = volts[run]
 the_time = time.time()
 
-file = open('C:/Users/s102772/Desktop/DoubleFreqTest/info' + str(run) +'.txt', 'w')
+file = open(newpath + "/info" + str(run) +'.txt', 'w')
 file.write("Temperature =" + str(temp) + ", humidity =" + str(humid) + ", Gain =" + str(gain) + ", Light =" + str(lamp) + ', Algae generation = ' + str(Alg_gen) + ". The starting time is: " + str(the_time) + ". The voltage is: " +str(Voltage) + ". Frequency = " +str(frequencies[run]))
 file.close()
 
@@ -60,7 +67,7 @@ frame_time = np.empty([1])
 
 #Connect to analog discovery
 Connect()
-#t = 1
+#t = 1.
 #test = 0
 imp_times = np.empty(1) #[0] = focus start, [1] = focus stop
 
@@ -88,6 +95,9 @@ while camera.IsGrabbing():
         cv2.imshow('Algae experiment', img)
         k = cv2.waitKey(1)
         
+        if k == ord('i'): # press down i to switch valve position
+            switchvalve()
+        
         if k == ord('r'): # press down r to record
             record = True
             frame_time = np.append(frame_time, frequency)
@@ -110,7 +120,7 @@ while camera.IsGrabbing():
                 stop = True
         
         if record_starting_time+5<new_time and not f_start:
-            record =False
+            record = False
         if record_starting_time+6<new_time and not f_start:
         
             cv2.destroyAllWindows()
@@ -118,9 +128,9 @@ while camera.IsGrabbing():
             the_time = time.time()
             df = pd.DataFrame({'Frame time':frame_time})
             df2 = pd.DataFrame({'Important times':imp_times})
-            df.to_csv('C:/Users/s102772/Desktop/DoubleFreqTest/Time Stamps' + str(run) +'.csv', sep=';', encoding='utf-8')
-            df2.to_csv('C:/Users/s102772/Desktop/DoubleFreqTest/Important times' + str(run) +'.csv', sep=';', encoding='utf-8')
-            file = open('C:/Users/s102772/Desktop/DoubleFreqTest/info' + str(run) +'.txt', 'a')
+            df.to_csv(newpath + "/Time Stamps" + str(run) +'.csv', sep=';', encoding='utf-8')
+            df2.to_csv(newpath + "/Important times" + str(run) +'.csv', sep=';', encoding='utf-8')
+            file = open(newpath + "/info" + str(run) +'.txt', 'a')
             file.write("The end time is: " + str(the_time))
             file.close()
             break
@@ -168,9 +178,9 @@ while camera.IsGrabbing():
             the_time = time.time()
             df = pd.DataFrame({'Frame time':frame_time})
             df2 = pd.DataFrame({'Important times':imp_times})
-            df.to_csv('C:/Users/s102772/Desktop/DoubleFreqTest/Time Stamps' + str(run) +'.csv', sep=';', encoding='utf-8')
-            df2.to_csv('C:/Users/s102772/Desktop/DoubleFreqTest/Important times' + str(run) +'.csv', sep=';', encoding='utf-8')
-            file = open('C:/Users/s102772/Desktop/DoubleFreqTest/info' + str(run) +'.txt', 'a')
+            df.to_csv(newpath + "/Time Stamps" + str(run) +'.csv', sep=';', encoding='utf-8')
+            df2.to_csv(newpath + "/Important times" + str(run) +'.csv', sep=';', encoding='utf-8')
+            file = open(newpath + "/info" + str(run) +'.txt', 'a')
             file.write("The end time is: " + str(the_time))
             file.close()
             break
