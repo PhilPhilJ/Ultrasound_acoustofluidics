@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 19 19:01:44 2023
+Created on Mon Nov 27 13:47:47 2023
 
 @author: joakimpihl
 """
-
 
 #Load necessary packages
 import cv2
@@ -17,11 +16,11 @@ import os
 
 # Paths to files
 #vid_num = 15 #Video 0 through 52
-path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 5.1/'
-for vid_num in range(24,53):
-    path_vid = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 5 edited/run'+ str(vid_num)+'.mp4'
-    path_imp_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 5 edited/Important times'+str(vid_num)+'.csv'
-    path_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 5 edited/Time Stamps'+str(vid_num)+'.csv'
+path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep test/'
+for vid_num in range(0,1):
+    path_vid = '/Users/joakimpihl/Desktop/Back ground test for jerks/run'+ str(vid_num)+'.mp4'
+    path_imp_times = '/Users/joakimpihl/Desktop/Back ground test for jerks/Important times'+str(vid_num)+'.csv'
+    path_times = '/Users/joakimpihl/Desktop/Back ground test for jerks/Time Stamps'+str(vid_num)+'.csv'
     
     # Load files
     vid = cv2.VideoCapture(path_vid)
@@ -68,10 +67,7 @@ for vid_num in range(24,53):
     intensities = np.empty([total_frames, px_width])
     
     plt.close('all') #Close all plots for good measure
-    
-    
-    
-    
+
     #Generate matrix containing vertically meaned intensities
     for i in range(total_frames):
         vid.set(cv2.CAP_PROP_POS_FRAMES, i)
@@ -152,7 +148,7 @@ for vid_num in range(24,53):
     for i,j in enumerate(ydata):
         if focus_time == 0 and j >= 0.9999*max(ydata):
             focus_time = xdata_time[i]
-    ax.legend(['Fit', 'Data'], loc='lower right', fontsize='15')
+    ax.legend(['Data', 'Fit'], loc='lower right', fontsize='15')
     
     
     plt.savefig(path_out + 'Plots/run '+str(vid_num)+' freq. '+str(round(freq, 3))+' MHz.png', dpi=300, bbox_inches='tight')
