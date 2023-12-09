@@ -35,13 +35,13 @@ converter = pylon.ImageFormatConverter()
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-newpath = r"D:\Canal sweeps\amps\position_1_211123"
+newpath = r"C:/Users/s102772/OneDrive - Danmarks Tekniske Universitet/Bachelorprojekt/Videoer/test of contrast and 2x focus"
 if not os.path.exists(newpath):
     os.makedirs(newpath)
 
-run = 4
+run = 13
 frequencies = np.linspace(1.884, 1.906, 31 )
-frequency = 1.8972#frequencies[run]
+frequency = 1.884#frequencies[run]
 
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (1440, 1080) # Camera resoloution: 4504x4504px, FPS: 18
@@ -55,8 +55,8 @@ humid = "19%"
 gain = "10 dB"
 lamp = "10 V and 3.5 A"
 Alg_gen = '2.3'
-volts = np.linspace(0.5,5,10)
-Voltage = volts[run]
+volts = np.linspace(0.1,2,20)
+Voltage = 1.1#volts[run]
 the_time = time.time()
 
 file = open(newpath + "/info" + str(run) +'.txt', 'w')
@@ -94,6 +94,9 @@ while camera.IsGrabbing():
         cv2.namedWindow('Algae experiment', cv2.WINDOW_NORMAL)
         cv2.imshow('Algae experiment', img)
         k = cv2.waitKey(1)
+        
+        if k ==ord("q"):
+            frequency = 3.78
         
         if k == ord('i'): # press down i to switch valve position
             switchvalve()
