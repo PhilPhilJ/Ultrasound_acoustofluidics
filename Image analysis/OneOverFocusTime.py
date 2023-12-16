@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from scipy.optimize import curve_fit
 
-df = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/Resonance freq.csv', delimiter=',', encoding='utf-8')
+df = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/Resonance freq_v2.csv', delimiter=',', encoding='utf-8')
 freq = np.array(df['Frequency (MHz)'].tolist())
 t_star = np.array(df['t_star'].tolist())
 reciprocal_t_star = 1/t_star
@@ -47,14 +47,16 @@ residuals = reciprocal_t_star - func(freq, *popt)
 ss_res = np.sum(residuals**2)
 ss_tot = np.sum((reciprocal_t_star-np.mean(reciprocal_t_star))**2)
 r_squared = round(1 - (ss_res / ss_tot), 2)
+r_squared_2 = 1 - (ss_res / ss_tot)
+
 #%%
 #Plotting 1/t vs. freq
 max_freq=round(float(freq[reciprocal_t_star==max(reciprocal_t_star)]),4)
-min_freq=round(float(freq[freq==1.8920666666666663]),4)
+min_freq=round(float(freq[11]),4)
 fig, ax = plt.subplots(figsize=(10,10))
 ax.plot(freq, reciprocal_t_star,'ro', markersize='10', label='Corrected data')
 ax.plot(freq[reciprocal_t_star==max(reciprocal_t_star)], reciprocal_t_star[reciprocal_t_star==max(reciprocal_t_star)],'o', markersize='10', label=f'Min focussing time (f = {max_freq} MHz)')
-ax.plot(freq[freq==1.8920666666666663], reciprocal_t_star[freq==1.8920666666666663], color= 'tab:green', marker='o', markersize='10', label=f'Max focussing time (f = {min_freq} MHz)')
+ax.plot(freq[11], reciprocal_t_star[11], color= 'tab:green', marker='o', markersize='10', label=f'Max focussing time (f = {min_freq} MHz)')
 ax.plot(xdata, ydata, linestyle='dashdot', color ='black', label=f'Fit ($r^2$={r_squared})')
 
 ax.set_xlabel(r'Frequency [MHz]', fontsize='17.5')
