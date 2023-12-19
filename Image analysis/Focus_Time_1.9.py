@@ -17,7 +17,7 @@ import os
 # Paths to files
 #vid_num = 15 #Video 0 through 52
 path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/'
-for vid_num in range(1,2):
+for vid_num in range(30,31):
     path_vid = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/run'+ str(vid_num)+'.mp4'
     path_imp_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/Important times'+str(vid_num)+'.csv'
     path_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/Time Stamps'+str(vid_num)+'.csv'
@@ -151,8 +151,8 @@ plt.show()
 #%%
 kappa = 0.0006815391424205656
 #Define the indeces which are 'weird'
-upper_indeces = np.concatenate(( range(8,100), range(132, 149), range(260,346), range(388,435), range(516,568), range(645,693), range(773,821), range(900,945), range(1029,1077), range(1157,1202), range(1285,1331), range(1413,1459)))#
-#upper_indeces = np.concatenate((range(0,8), range(98, 133), range(149,260), range(340,388), range(433,517), range(567,645), range(691,773), range(819,901), range(946,1029), range(1073,1157)))# # , range(235,260)
+upper_indeces = np.concatenate(( range(8,95), range(133, 149), range(260,336), range(388,435), range(516,573), range(644,700), range(772,832), range(900,959), range(1028,1089), range(1156,1215), range(1284,1343), range(1412,1470), range(1540,1597), range(1668,1725), range(1796,1851), range(1924,1980), range(2052,2105), range(2180,2234),range(2308,2360), range(2436,2489),range(2564,2614)))#
+#upper_indeces = np.concatenate((range(0,8), range(98, 132), range(149,260), range(342,388), range(433,516), range(566,645), range(691,773)))#, range(819,901), range(946,1029), range(1073,1157)))# # , range(235,260)
 
 I_norm_2 = np.copy(I_norm)
 
@@ -202,7 +202,7 @@ ax.scatter(timestamps[I_norm_2 != I_norm_2[upper_indeces]], I_norm_2[I_norm_2 !=
 ax.scatter(timestamps[upper_indeces], I_norm_2[upper_indeces], marker='o', color='blue', label=f'Shifted data ($\kappa$ = {kappa_e})')
 ax.plot(xdata_time, ydata, linestyle='dashdot', color='black', label=f'Fit ($t^*$ = {t_star_e}, R = {R_fit_e})')
 
-plt.ylim((0.995, 1.0008))
+plt.ylim((0.9955, 1.0008))
 
 plt.title('Run '+str(vid_num)+' and freq. ' + str(round(freq,3))+r' MHz (Fitting parameters: $t^*$ and R)', fontsize='20')
     
@@ -212,11 +212,19 @@ ax.set_ylabel(r'$\mathrm{I/I_{max}}$', fontsize='17.5')
 plt.legend(loc='lower right')
 
 #%%
+print(np.mean((I_norm_2-func(timestamps, *popt))**2)) #Print rmse
+
+#%%
 plt.savefig(path_out + 'Plots/run '+str(vid_num)+' freq. '+str(round(freq, 3))+' MHz.png', dpi=300, bbox_inches='tight')
     
 df = pd.DataFrame({'Frequency (MHz)':[freq], 't_star':[t_star], 'alpha':[alpha], 'R (Fit)':[R_fit], 'R (Data)':[R_data], 'St dev on t_star':[sigma], 'Sample size':[N_samples], 'R squared':[r_squared]})
+
+df_I = pd.DataFrame({'Timestamps':timestamps, 'Normalized intensity':I_norm_2 })
+df_I.to_csv(path_out + 'corrected I_norm run'+str(vid_num)+'.csv', sep=',')
     
-if os.path.exists(path_out + 'Resonance freq.csv') != True:
-    df.to_csv(path_out + 'Resonance freq.csv', sep=',')
+if os.path.exists(path_out + 'Resonance freq_v2.csv') != True:
+    df.to_csv(path_out + 'Resonance freq_v2.csv', sep=',')
 else:
-    df.to_csv(path_out + 'Resonance freq.csv', sep=',', header=False, mode='a')
+    df.to_csv(path_out + 'Resonance freq_v2.csv', sep=',', header=False, mode='a')
+
+
