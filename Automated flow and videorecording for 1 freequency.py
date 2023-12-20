@@ -18,22 +18,29 @@ from Valve_control import switchvalve
 print('Press ESC to close the window')
 
 arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.5)
+arduinoSer.write(b'0') # makes sure the flow is off
 
-# conecting to the first available camera
-camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+terminate = 0 #condition for breaking the for loop
 
-# Grabing Continusely (video) with minimal delay
-camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly) 
-converter = pylon.ImageFormatConverter()
-
-# converting to opencv bgr format
-converter.OutputPixelFormat = pylon.PixelType_BGR8packed
-converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+#Connect to analog discovery
+Connect()
 
 runs = 20
 for i in range(runs):
+    # conecting to the first available camera
+    camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+    
+    # Grabing Continusely (video) with minimal delay
+    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly) 
+    converter = pylon.ImageFormatConverter()
+    
+    # converting to opencv bgr format
+    converter.OutputPixelFormat = pylon.PixelType_BGR8packed
+    converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+
+
         
-    frequency = 1.884
+    frequency = 1.9
     newpath = r"C:/Users/s102772/OneDrive - Danmarks Tekniske Universitet/Bachelorprojekt/Videoer/Same frequency/run" + str(i+1) + "Frequency " + str(frequency) + "Hz"
     if not os.path.exists(newpath):
         os.makedirs(newpath)
@@ -45,9 +52,6 @@ for i in range(runs):
     out = cv2.VideoWriter(newpath +
                           "/frequency" + str(frequency) +
                           '.mp4', fourcc, FPS, size, False) #Change path to saved location
-    
-    #Connect to analog discovery
-    Connect()
     
     ##other parameters
     temp = "24 C"
@@ -92,6 +96,7 @@ for i in range(runs):
             current_time = time.time()
             
             if k == 27: # press ESC if the scrips needs to be terminated prematurely 
+                terminate = 1
                 break
             
             if record == True: #recording is on and timestamps are recorded
@@ -104,30 +109,43 @@ for i in range(runs):
                     first = 0
                     opengate = 1
             
-            if 5 > current_time - static_time > 6 and opengate: # switches short cut valve to off and GTCH to on
+            if 5 < current_time - static_time < 6 and opengate: # switches short cut valve to off and GTCH to on
                 switchvalve()
+                print("GCTH open")
                 opengate = 0
+                print(current_time - static_time)
             
-            if 10 > current_time - static_time > 11 and not opengate: #start flow in Cetoni elements
+            if 8 < current_time - static_time < 9 and not opengate: #start flow in Cetoni elements
                 arduinoSer.write(b'1')
-                static_time = time.time()
                 print("Flow has started")
                 opengate = 1
+                print(current_time - static_time)
                 
-            if 20 > current_time - static_time > 21 and opengate: # switches short cut valve to on and GTCH to off
+            if 10 < current_time - static_time < 11 and opengate: #start flow in Cetoni elements
+                arduinoSer.write(b'0')
+                print("Flow command terminated")
+                opengate = 0
+                print(current_time - static_time)
+                
+            if 30 < current_time - static_time < 31 and not opengate: # switches short cut valve to on and GTCH to off
                 switchvalve()
-                opengate = 0
-            
-            if 23 > current_time - static_time > 24 and not opengate: # starts focusing
-                funcGen(freq = frequency, Amplitude = voltage)
-                imp_times = np.append(imp_times, time.time())
+                print("GCTH closed")
                 opengate = 1
-                
-            if current_time - static_time > 50 and opengate: #stops focusing and initiales run stop
-                record = 0
+                print(current_time - static_time)
+            
+            if 40 < current_time - static_time < 41 and opengate: # starts focusing
+                funcGen(freq = frequency, Amplitude = voltage)
+                print("focusing...")
+                imp_times = np.append(imp_times, time.time())
                 opengate = 0
+                print(current_time - static_time)
+                
+            if current_time - static_time > 60 and not opengate: #stops focusing and initiales run stop
+                record = 0
+                opengate = 1
                 funcStop()
                 imp_times = np.append(imp_times, time.time())
+                print(current_time - static_time)
                     
             if not record and current_time - static_time > 55: #stops the recording and ends the run
              
@@ -145,7 +163,9 @@ for i in range(runs):
     # Releasing the resource    
     camera.StopGrabbing()
     out.release() 
-
+    if terminate:
+        cv2.destroyAllWindows()
+        break
 ## Closing everything
 disconnect()
 arduinoSer.write(b'0')
