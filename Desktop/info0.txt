@@ -1,1 +1,0 @@
-Temperature =24 C, humidity =19%, Gain =10 dB, Light =10 V and 3.5 A, Algae generation = 2.3. The starting time is: 1700059101.8996224. The voltage is: 1. Frequency = 1.84The end time is: 1700059128.3838303
