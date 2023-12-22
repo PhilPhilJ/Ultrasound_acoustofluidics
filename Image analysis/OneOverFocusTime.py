@@ -21,21 +21,12 @@ error = np.array(df['St dev on t_star'].tolist())
 #focus_time = np.delete(focus_time, 0)
 #freq = np.delete(freq, 0)
 #%%
-#Remove negative values from data
-# focus_time_new = np.empty(0)
-# freq_new = np.empty(0)
-
-# for i,j in enumerate(focus_time):
-#     if j>0:
-#         focus_time_new = np.append(focus_time_new, j)
-#         freq_new = np.append(freq_new, freq[i])
-#%%
-#Fitting to lorentzian peak
-def func(x, x1, w1, h1): #x2, w2, h2):
-    return (h1*w1**2)/(w1**2+(x-x1)**2)# + (h2*w2**2)/(w2**2+(x-x2)**2)
+#Fitting to lorentzian peak: fc = center frequency, Df = peak width, Lc = peak amplitude
+def func(x, fc, Df, Lc): #x2, w2, h2):
+    return Lc/(1+((x-fc)/Df)**2)# + (h2*w2**2)/(w2**2+(x-x2)**2)
 
 #popt, pcov = curve_fit(func, freq_new, 1/focus_time_new, bounds=([1.88, 0, 0], [1.91, 0.05, 0.5]))
-popt, pcov = curve_fit(func, freq, reciprocal_t_star, bounds=([1.895, 0, 0], [1.90, 0.05, 2])) #bounds=([1.887, 0, 0, 1.895, 0, 0], [1.89, 0.05, 2, 1.90, 0.05, 2]
+popt, pcov = curve_fit(func, freq[11:-1], reciprocal_t_star[11:-1], bounds=([1.895, 0, 0], [1.90, 0.05, 2])) #bounds=([1.887, 0, 0, 1.895, 0, 0], [1.89, 0.05, 2, 1.90, 0.05, 2]
 
 
 #Generate data from fit
@@ -62,7 +53,7 @@ ax.plot(xdata, ydata, linestyle='dashdot', color ='black', label=f'Fit ($r^2$={r
 ax.set_xlabel(r'Frequency [MHz]', fontsize='17.5')
 ax.set_ylabel(r'1/$t^*$ [$\mathrm{s}^{-1}$]', fontsize='17.5')
 plt.legend()
-plt.savefig('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/Resonance.png', dpi=300, bbox_inches='tight')
+#plt.savefig('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/Resonance.png', dpi=300, bbox_inches='tight')
 #Generate csv file with filtered data
 #df_write = pd.DataFrame({'Frequency (MHz)':freq_new, 'Focusing time (99.99%)':focus_time_new})
 #df_write.to_csv('path', sep=',')
