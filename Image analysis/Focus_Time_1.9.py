@@ -18,9 +18,9 @@ import os
 #vid_num = 15 #Video 0 through 52
 path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/'
 for vid_num in range(30,31):
-    path_vid = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/run'+ str(vid_num)+'.mp4'
-    path_imp_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/Important times'+str(vid_num)+'.csv'
-    path_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/Time Stamps'+str(vid_num)+'.csv'
+    path_vid = 'C:/Users/Phili/OneDrive/Skrivebord/Video test/run1Frequency 1.91Hz/frequency1.91'+ str(vid_num)+'.mp4'
+    path_imp_times = 'C:/Users/Phili/OneDrive/Skrivebord/Video test/run1Frequency 1.91Hz/Important times1.91Hz'+str(vid_num)+'.csv'
+    path_times = 'C:/Users/Phili/OneDrive/Skrivebord/Video test/run1Frequency 1.91Hz/Time Stamps1.91Hz'+str(vid_num)+'.csv'
     
     # Load files
     vid = cv2.VideoCapture(path_vid)
