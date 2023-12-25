@@ -145,6 +145,7 @@ for j in range(len(frequencies)):
                 record = 0
                 funcStop()
                 print("focusing stoped")
+                opengate = 1
                 imp_times = np.append(imp_times, time.time())
                 print(current_time - static_time)
                     
@@ -158,67 +159,6 @@ for j in range(len(frequencies)):
                     df2.to_csv(newpath + "/Important times" + str(frequency) + "Hz" +'.csv', sep=';', encoding='utf-8')
                     file.close()
                     break
-                
-                if record == True: #recording is on and timestamps are recorded
-                    frame_time = np.append(frame_time, frequency)
-                    record_starting_time = time.time()
-                    out.write(img)
-                    frame_time = np.append(frame_time, time.time())
-                    if first: #condition to let the user know that the recording has started and opens gate.
-                        print('Starting recording..')
-                        first = 0
-                        opengate = 1
-                
-                if 5 < current_time - static_time < 6 and opengate: # switches short cut valve to off and GTCH to on
-                    switchvalve()
-                    print("GCTH open")
-                    opengate = 0
-                    print(current_time - static_time)
-                
-                if 8 < current_time - static_time < 9 and not opengate: #start flow in Cetoni elements
-                    arduinoSer.write(b'1')
-                    print("Flow has started")
-                    opengate = 1
-                    print(current_time - static_time)
-                    
-                if 10 < current_time - static_time < 11 and opengate: #start flow in Cetoni elements
-                    arduinoSer.write(b'0')
-                    print("Flow command terminated")
-                    opengate = 0
-                    print(current_time - static_time)
-                    
-                if 30 < current_time - static_time < 31 and not opengate: # switches short cut valve to on and GTCH to off
-                    switchvalve()
-                    print("GCTH closed")
-                    opengate = 1
-                    print(current_time - static_time)
-                
-                if 40 < current_time - static_time < 41 and opengate: # starts focusing
-                    funcGen(freq = frequency, Amplitude = voltage)
-                    print("focusing...")
-                    imp_times = np.append(imp_times, time.time())
-                    opengate = 0
-                    print(current_time - static_time)
-                    
-                if current_time - static_time > 60 and not opengate: #stops focusing and initiales run stop
-                    record = 0
-                    opengate = 1
-                    funcStop()
-                    imp_times = np.append(imp_times, time.time())
-                    print(current_time - static_time)
-                        
-                if not record and current_time - static_time > 55: #stops the recording and ends the run
-                 
-                        cv2.destroyAllWindows()
-                        the_time = time.time()
-                        df = pd.DataFrame({'Frame time':frame_time})
-                        df2 = pd.DataFrame({'Important times':imp_times})
-                        df.to_csv(newpath + "/Time Stamps" + str(frequency) + "Hz" +'.csv', sep=';', encoding='utf-8')
-                        df2.to_csv(newpath + "/Important times" + str(frequency) + "Hz" +'.csv', sep=';', encoding='utf-8')
-                        file.close()
-                        break
-                
-            grabResult.Release()
             
         grabResult.Release()
         
