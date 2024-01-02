@@ -7,20 +7,21 @@ Created on Wed Nov 29 14:06:19 2023
 """
 
 #Load necessary packages
-import cv2
+import cv2, os, sys
+sys.path.append('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Ultrasound_acoustofluidics/')
 import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 from scipy.optimize import curve_fit
-import os
-
+from Moving_Average import *
+#%%
 # Paths to files
 #vid_num = 15 #Video 0 through 52
-path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/'
+path_out ='/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/ErrorAnalysis/1.886MHz/'
 for vid_num in range(1,21):
-    path_vid = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/run'+ str(vid_num)+'.mp4'
-    path_imp_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/Important times'+str(vid_num)+'.csv'
-    path_times = '/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Experiments/Focus sweep 6 edited/Time Stamps'+str(vid_num)+'.csv'
+    path_vid = '/Users/joakimpihl/Desktop/Videos for error analysis/Cropped videos/1.886MHz/run'+ str(vid_num)+' 1.886 MHz.mp4'
+    path_imp_times = '/Users/joakimpihl/Desktop/Videos for error analysis/Cropped videos/1.886MHz/Important times'+str(vid_num)+' 1.886 MHz.csv'
+    path_times = '/Users/joakimpihl/Desktop/Videos for error analysis/Cropped videos/1.886MHz/Time Stamps'+str(vid_num)+' 1.886 MHz.csv'
     
     # Load files
     vid = cv2.VideoCapture(path_vid)
@@ -51,7 +52,7 @@ for vid_num in range(1,21):
     ###################################### Generate intensity matrix ######################################
     ret, frame = vid.read()#Reads the fist frame
     total_frames = int(vid.get(cv2.CAP_PROP_FRAME_COUNT)) #Frames in video
-    
+
     # Scaling information
     px_width = np.size(frame, axis=1) #Width of video in px
     px_height = np.size(frame, axis=0) #Height of video in px
@@ -60,8 +61,13 @@ for vid_num in range(1,21):
     height = px_height * mm_per_px #um
     
     #if there's a missmatch between the number of frames and the number of timestamps
-    if len(timestamps) != total_frames:
-        raise ValueError('The number of timestamps doens\'t match the number of frames recorded.')
+    if len(timestamps) > total_frames:
+        timestamps = timestamps[len(timestamps)-total_frames: len(timestamps)]
+    elif len(timestamps) < total_frames:
+        vid.set(cv2.CAP_PROP_POS_FRAMES, total_frames-len(timestamps))
+    
+    #if len(timestamps) != total_frames or len(timestamps) != total_frames+(len(timestamps)-total_frames):
+    #    raise ValueError('The number of timestamps doens\'t match the number of frames recorded.')
     
     #Define empty arrays to contain data
     intensities = np.empty([total_frames, px_width])
@@ -76,7 +82,7 @@ for vid_num in range(1,21):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Converts the frame to grayscale
         frame_mean = np.mean(frame, axis=0)
         intensities[i] = frame_mean 
-    
+    vid.set(cv2.CAP_PROP_POS_FRAMES, 0)
     #Remove the first meaned frame as values are always 'weird'
     intensities = np.delete(intensities, 0, 0)
     timestamps = np.delete(timestamps, 0)
@@ -106,65 +112,58 @@ for vid_num in range(1,21):
             I_norm[i] = I_t/I_max
 
 
-plt.close('all')
-
-# Creating I_norm_2
-I_norm_2 = np.copy(I_norm)
-
-def func(t, t_star, R): #Define function which data is fitted to
-    return 1-R/k*np.arctan(np.tan(k)*np.exp(-t/t_star))
-
-popt, pcov = curve_fit(func, timestamps, I_norm_2) #Fitting - Use all data or still just truncated data set?
-
-#Fitting parameters are defined
-t_star = popt[0]
-R_fit = popt[1]
-sigma = pcov[0,0]
-N_samples = len(timestamps[t_index_0:t_index_end+1])
-delta_y=R_fit/(1-alpha)
-
-residuals = I_norm_2 - func(timestamps, *popt)
-ss_res = np.sum(residuals**2)
-ss_tot = np.sum((I_norm_2-np.mean(I_norm_2))**2)
-r_squared = 1 - (ss_res / ss_tot)
-
-#Generate fitting data to overlay experimental data
-xdata_time = np.linspace(timestamps[0], timestamps[-1], 1000)
-ydata = func(xdata_time, *popt)
-
-plt.close('all')
-
-t_star_e = format(t_star, ".1e")
-R_fit_e = format(R_fit, ".1e")
-
-fig, ax = plt.subplots(figsize=(10,7.5))
-ax.vlines(x=timestamps[t_index_0], ymin=0, ymax=2, color='black', alpha=0.5, linestyle='dashdot', label='_nolegend_')
-ax.vlines(x=timestamps[t_index_end], ymin=0, ymax=2, color='black', alpha=0.5, linestyle='dashdot', label='_nolegend_')
-ax.hlines(y=1-R_fit/(1-alpha), xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
-ax.hlines(y=1, xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
-ax.scatter(timestamps, I_norm_2, marker='o', color='red', label='Data')
-ax.plot(xdata_time, ydata, linestyle='dashdot', color='black', label=f'Fit ($t^*$ = {t_star_e}, R = {R_fit_e})')
-
-plt.ylim((0.9955, 1.0008))
-
-plt.title('Run '+str(vid_num)+' and freq. ' + str(round(freq,3))+r' MHz (Fitting parameters: $t^*$ and R)', fontsize='20')
+    plt.close('all')
     
-ax.set_xlabel(r'Time ($\mathrm{s}$)', fontsize='17.5')
-ax.set_ylabel(r'$\mathrm{I/I_{max}}$', fontsize='17.5')
-
-plt.legend(loc='lower right')
-
-#%%
-plt.savefig(path_out + 'Plots/run '+str(vid_num)+' freq. '+str(round(freq, 3))+' MHz.png', dpi=300, bbox_inches='tight')
+    # Creating I_norm_2
+    I_norm_2 = np.copy(I_norm)
     
-df = pd.DataFrame({'Frequency (MHz)':[freq], 't_star':[t_star], 'alpha':[alpha], 'R (Fit)':[R_fit], 'R (Data)':[R_data], 'St dev on t_star':[sigma], 'Sample size':[N_samples], 'R squared':[r_squared]})
-
-df_I = pd.DataFrame({'Timestamps':timestamps, 'Normalized intensity':I_norm_2 })
-df_I.to_csv(path_out + 'Corrected I_norm/corrected I_norm run'+str(vid_num)+'.csv', sep=',')
+    def func(t, t_star, R): #Define function which data is fitted to
+        return 1-R/k*np.arctan(np.tan(k)*np.exp(-t/t_star))
     
-if os.path.exists(path_out + 'Resonance freq_v2.csv') != True:
-    df.to_csv(path_out + 'Resonance freq_v2.csv', sep=',')
-else:
-    df.to_csv(path_out + 'Resonance freq_v2.csv', sep=',', header=False, mode='a')
-
-
+    popt, pcov = curve_fit(func, timestamps, I_norm_2) #Fitting - Use all data or still just truncated data set?
+    
+    #Fitting parameters are defined
+    t_star = popt[0]
+    R_fit = popt[1]
+    delta_y=R_fit/(1-alpha)
+    
+    residuals = I_norm_2 - func(timestamps, *popt)
+    ss_res = np.sum(residuals**2)
+    ss_tot = np.sum((I_norm_2-np.mean(I_norm_2))**2)
+    r_squared = 1 - (ss_res / ss_tot)
+    
+    #Generate fitting data to overlay experimental data
+    xdata_time = np.linspace(timestamps[0], timestamps[-1], 1000)
+    ydata = func(xdata_time, *popt)
+    
+    plt.close('all')
+    
+    t_star_e = format(t_star, ".1e")
+    R_fit_e = format(R_fit, ".1e")
+    
+    fig, ax = plt.subplots(figsize=(10,7.5))
+    ax.hlines(y=1-R_fit/(1-alpha), xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
+    ax.hlines(y=1, xmin=timestamps[0], xmax=timestamps[-1], color='silver', alpha=1, linestyle='dashdot', label='_nolegend_')
+    ax.scatter(timestamps, I_norm_2, marker='o', color='red', label='Data')
+    ax.plot(xdata_time, ydata, linestyle='dashdot', color='black', label=f'Fit ($t^*$ = {t_star_e}, R = {R_fit_e})')
+    
+    #plt.ylim((0.9955, 1.0008))
+    
+    plt.title('Run '+str(vid_num)+' and freq. ' + str(round(freq,3))+r' MHz (Fitting parameters: $t^*$ and R)', fontsize='20')
+        
+    ax.set_xlabel(r'Time ($\mathrm{s}$)', fontsize='17.5')
+    ax.set_ylabel(r'$\mathrm{I/I_{max}}$', fontsize='17.5')
+    
+    plt.legend(loc='lower right')
+    
+    plt.savefig(path_out + 'Plots/run '+str(vid_num)+' freq. '+str(round(freq, 3))+' MHz.png', dpi=300, bbox_inches='tight')
+        
+    df = pd.DataFrame({'Frequency (MHz)':[freq], 't_star':[t_star], 'alpha':[alpha], 'R (Fit)':[R_fit], 'R (Data)':[R_data], 'R squared':[r_squared]})
+    
+    df_I = pd.DataFrame({'Timestamps':timestamps, 'Normalized intensity':I_norm_2 })
+    df_I.to_csv(path_out + 'I_norm/I_norm run'+str(vid_num)+'.csv', sep=',', encoding='utf-8')
+    
+    if os.path.exists(path_out + 'Resonance freq_v2.csv') != True:
+        df.to_csv(path_out + 'Resonance freq_v2.csv', sep=',')
+    else:
+        df.to_csv(path_out + 'Resonance freq_v2.csv', sep=',', header=False, mode='a')
