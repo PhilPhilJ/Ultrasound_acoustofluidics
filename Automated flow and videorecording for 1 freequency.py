@@ -4,7 +4,8 @@ Created on Tue Dec 19 14:50:42 2023
 
 @author: s102772
 """
-
+import sys
+sys.path.append('C:/Users/s102772/Desktop/Ultrasound_acoustofluidics')
 import cv2
 from pypylon import pylon
 import serial, time
@@ -25,12 +26,20 @@ terminate = 0 #condition for breaking the for loop
 #Connect to analog discovery
 Connect()
 
-frequencies = np.linspace(1.89, 1.91, 5)
+#Use the split if frequencies in different regions are wanted
+split_freq = 1
+if split_freq:
+    lower = np.linspace(1.886, 1.892 ,15)
+    upper = np.linspace(1.905, 1.91 ,15)
+    
+    frequencies = np.concatenate((lower, upper), axis=0)
+else:
+    frequencies = np.linspace(1.892, 1.905 ,71)
 
 for j in range(len(frequencies)):
 
     frequency = frequencies[j]    
-    runs = 20
+    runs = 1
     for i in range(runs):
         # conecting to the first available camera
         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
@@ -47,7 +56,7 @@ for j in range(len(frequencies)):
         single_frequecy = 0
         if single_frequecy == True:
             frequency = 1.91
-        newpath = r"C:/Users/s102772/OneDrive - Danmarks Tekniske Universitet/Bachelorprojekt/Videoer/Same frequency/run" + str(i+1) + "Frequency " + str(frequency) + "Hz"
+        newpath = r"D:/Sweep with 1 run at each frequeny 1.892 - 1.905/run " + str(i+1) + "Frequency " + str(frequency) + "Hz"
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         
@@ -56,7 +65,7 @@ for j in range(len(frequencies)):
         FPS = 20 # Frames per second of camera
         fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
         out = cv2.VideoWriter(newpath +
-                              "/frequency" + str(frequency) +
+                            "/frequency" + str(frequency) +
                               '.mp4', fourcc, FPS, size, False) #Change path to saved location
         
         ##other parameters
@@ -81,7 +90,7 @@ for j in range(len(frequencies)):
         imp_times = np.empty(1) #[0] = focus start, [1] = focus stop
         frame_time = np.append(frame_time, frequency) # Appends the frequecyto as the first value in the timestamps
         
-        estimated_focustime = 25 #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
+        estimated_focustime = 43 #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
         
         #conditions used to control the if conditions
         first = True
