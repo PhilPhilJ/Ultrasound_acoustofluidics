@@ -26,12 +26,20 @@ terminate = 0 #condition for breaking the for loop
 #Connect to analog discovery
 Connect()
 
-frequencies = np.linspace(1.885, 1.8875, 2)
+#Use the split if frequencies in different regions are wanted
+split_freq = 1
+if split_freq:
+    lower = np.linspace(1.886, 1.892 ,15)
+    upper = np.linspace(1.905, 1.91 ,15)
+    
+    frequencies = np.concatenate((lower, upper), axis=0)
+else:
+    frequencies = np.linspace(1.892, 1.905 ,71)
 
 for j in range(len(frequencies)):
 
     frequency = frequencies[j]    
-    runs = 20
+    runs = 1
     for i in range(runs):
         # conecting to the first available camera
         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
@@ -48,7 +56,7 @@ for j in range(len(frequencies)):
         single_frequecy = 0
         if single_frequecy == True:
             frequency = 1.91
-        newpath = r"D:/20 measurements - 18875 and 1885MHz/run " + str(i+1) + "Frequency " + str(frequency) + "Hz"
+        newpath = r"D:/Sweep with 1 run at each frequeny 1.892 - 1.905/run " + str(i+1) + "Frequency " + str(frequency) + "Hz"
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         
@@ -82,7 +90,7 @@ for j in range(len(frequencies)):
         imp_times = np.empty(1) #[0] = focus start, [1] = focus stop
         frame_time = np.append(frame_time, frequency) # Appends the frequecyto as the first value in the timestamps
         
-        estimated_focustime = 47 #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
+        estimated_focustime = 43 #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
         
         #conditions used to control the if conditions
         first = True
