@@ -41,7 +41,7 @@ if not os.path.exists(newpath):
 
 run = 13
 frequencies = np.linspace(1.884, 1.906, 31 )
-frequency = 1.884#frequencies[run]
+frequency = 1.897#frequencies[run]
 
 #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
 size = (1440, 1080) # Camera resoloution: 4504x4504px, FPS: 18
