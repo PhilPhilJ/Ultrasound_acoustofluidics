@@ -26,21 +26,37 @@ terminate = 0 #condition for breaking the for loop
 #Connect to analog discovery
 Connect()
 
+#This part is used for sweep of a broad span of frequencies to change the estimated focus time according to the frequency
+different_times = 0
+if different_times:
+    time_a = np.linspace(30, 5, 50)
+    time_b = np.linspace(5, 30, 50)
+    
+    times = np.concatenate((time_a, time_b), axis=0)
+
 #Use the split if frequencies in different regions are wanted
-split_freq = 1
+split_freq = 0
 if split_freq:
-    lower = np.linspace(1.886, 1.892 ,15)
-    upper = np.linspace(1.905, 1.91 ,15)
+    lower = np.linspace(1.8975 - 0.0055, 1.8975, 50)
+    upper = np.linspace(1.8975, 1.8975 + 0.0055, 50)
     
     frequencies = np.concatenate((lower, upper), axis=0)
 else:
-    frequencies = np.linspace(1.892, 1.905 ,71)
+    frequencies = np.linspace(1.899, 1.901 ,5)
 
 for j in range(len(frequencies)):
-
+    
     frequency = frequencies[j]    
-    runs = 1
+    
+    #if only single frequency is wanted
+    single_frequecy = 1
+    if single_frequecy == True:
+        frequency = 1.8975
+        
+    runs = 100
+    
     for i in range(runs):
+        
         # conecting to the first available camera
         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         
@@ -52,11 +68,7 @@ for j in range(len(frequencies)):
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         
-        #if only single frequency is wanted
-        single_frequecy = 0
-        if single_frequecy == True:
-            frequency = 1.91
-        newpath = r"D:/Sweep with 1 run at each frequeny 1.892 - 1.905/run " + str(i+1) + "Frequency " + str(frequency) + "Hz"
+        newpath = r"D:/High concentration/Gauss on same frequency/"
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         
@@ -65,7 +77,7 @@ for j in range(len(frequencies)):
         FPS = 20 # Frames per second of camera
         fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
         out = cv2.VideoWriter(newpath +
-                            "/frequency" + str(frequency) +
+                            "run "  + str(j) + "." + str(i) +
                               '.mp4', fourcc, FPS, size, False) #Change path to saved location
         
         ##other parameters
@@ -73,9 +85,9 @@ for j in range(len(frequencies)):
         humid = "19%"
         gain = "10 dB"
         lamp = "10 V and 3.5 A"
-        Alg_gen = '2.3'
+        Alg_gen = 'Mix (1.1 + 3.2 + 3.21 + 2.3)'
         voltage = 1
-        file = open(newpath + "/info" + str(frequency) +'.txt', 'w')
+        file = open(newpath + "run "  + str(j) + "." + str(i) +'.txt', 'w')
         file.write("Temperature =" + str(temp) + 
                    ", humidity =" + str(humid) + 
                    ", Gain =" + str(gain) + 
@@ -90,7 +102,10 @@ for j in range(len(frequencies)):
         imp_times = np.empty(1) #[0] = focus start, [1] = focus stop
         frame_time = np.append(frame_time, frequency) # Appends the frequecyto as the first value in the timestamps
         
-        estimated_focustime = 43 #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
+        if different_times:
+            estimated_focustime = times[j] #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
+        else:
+            estimated_focustime = 6
         
         #conditions used to control the if conditions
         first = True
@@ -175,17 +190,17 @@ for j in range(len(frequencies)):
                         the_time = time.time()
                         df = pd.DataFrame({'Frame time':frame_time})
                         df2 = pd.DataFrame({'Important times':imp_times})
-                        df.to_csv(newpath + "/Time Stamps" + str(frequency) + "Hz" +'.csv', sep=';', encoding='utf-8')
-                        df2.to_csv(newpath + "/Important times" + str(frequency) + "Hz" +'.csv', sep=';', encoding='utf-8')
+                        df.to_csv(newpath + "run"  + str(j) + "." + str(i) + " " + 'Frame time' + '.csv', sep=';', encoding='utf-8')
+                        df2.to_csv(newpath + "run"  + str(j) + "." + str(i) + " " +'Important times' + '.csv', sep=';', encoding='utf-8')
                         file.close()
                         break
                 
             grabResult.Release()
-            
+        
         # Releasing the resource    
         camera.StopGrabbing()
         out.release() 
-        
+    
         if terminate:
             cv2.destroyAllWindows()
             funcStop()
