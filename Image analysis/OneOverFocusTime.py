@@ -12,8 +12,8 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from scipy.optimize import curve_fit
 
-df = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/Corrected fits/Resonance freq (Corrected)_sorted.csv', delimiter=';', encoding='utf-8')
-freq = np.array(pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Focus sweep 6.3/freq_and_t_star.csv', delimiter=',', encoding='utf-8')['Frequency (MHz)'].tolist())
+df = pd.read_csv('/Users/joakimpihl/Desktop/DTU/7. Semester/Bachelorprojekt/Results/Biiiig sweep/Resonance freq_diff_fit.csv', delimiter=',', encoding='utf-8')
+freq = np.array(df['Frequency (MHz)'].tolist())
 t_star = np.array(df['t_star'].tolist())
 
 reciprocal_t_star = 1/t_star
