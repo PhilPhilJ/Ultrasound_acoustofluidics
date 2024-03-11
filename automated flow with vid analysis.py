@@ -59,6 +59,7 @@ terminate = 0 #condition for breaking the for loop
 #Connect to analog discovery
 Connect()
 
+fitting_parameters = np.array([[],[]]) # array to store the fitting parameters
 
 frequency = 1.8975 # frequency in MHz  
 runs = 100
@@ -189,6 +190,7 @@ for i in range(runs):
             if end_fit(mean_values) and not opengate: #stops focusing and initiales run stop
                 t = frame_time - imp_times[0]
                 popt, pcov = curve_fit(func, frame_time[find_closest_to_zero_index(frame_time):], mean_values(find_closest_to_zero_index(frame_time):), p0=[1, 0.005], bounds=([0, 0], [10, 0.05])
+                fitting_parameters = np.append(fitting_parameters, popt)
                 record = 0
                 funcStop()
                 print("focusing stoped")
@@ -202,6 +204,7 @@ for i in range(runs):
                 the_time = time.time()
                 df = pd.DataFrame({'Frame time':frame_time})
                 df2 = pd.DataFrame({'Important times':imp_times})
+                df3 = pd.DataFrame({'Fitting parameters (t*)':popt[0], 'Fitting parameters (R)':popt[1]})
                 df.to_csv(newpath + "run"  + str(j) + "." + str(i) + " " + 'Frame time' + '.csv', sep=';', encoding='utf-8')
                 df2.to_csv(newpath + "run"  + str(j) + "." + str(i) + " " +'Important times' + '.csv', sep=';', encoding='utf-8')
                 file.close()
