@@ -29,8 +29,10 @@ Connect()
 #This part is used for sweep of a broad span of frequencies to change the estimated focus time according to the frequency
 different_times = 0
 if different_times:
-    time_a = np.linspace(30, 5, 50)
-    time_b = np.linspace(5, 30, 50)
+    #time_a = np.linspace(30, 5, 50)
+    #time_b = np.linspace(5, 30, 50)
+    time_a = np.linspace(45, 25, 6)
+    time_b = np.linspace(25, 5, 94)
     
     times = np.concatenate((time_a, time_b), axis=0)
 
@@ -42,18 +44,19 @@ if split_freq:
     
     frequencies = np.concatenate((lower, upper), axis=0)
 else:
-    frequencies = np.linspace(1.899, 1.901 ,5)
+    frequencies = np.linspace(2, 2.1 ,20)
 
-for j in range(len(frequencies)):
+
+for j in range(0,1):
     
     frequency = frequencies[j]    
     
     #if only single frequency is wanted
-    single_frequecy = 1
+    single_frequecy = 0
     if single_frequecy == True:
-        frequency = 1.8975
+        frequency = 1.898
         
-    runs = 100
+    runs = 1
     
     for i in range(runs):
         
@@ -68,7 +71,7 @@ for j in range(len(frequencies)):
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         
-        newpath = r"D:/High concentration/Gauss on same frequency/"
+        newpath = r"C:/Users/s102772/Desktop/Mervan"
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         
@@ -86,7 +89,7 @@ for j in range(len(frequencies)):
         gain = "10 dB"
         lamp = "10 V and 3.5 A"
         Alg_gen = 'Mix (1.1 + 3.2 + 3.21 + 2.3)'
-        voltage = 1
+        voltage = 5
         file = open(newpath + "run "  + str(j) + "." + str(i) +'.txt', 'w')
         file.write("Temperature =" + str(temp) + 
                    ", humidity =" + str(humid) + 
@@ -100,12 +103,13 @@ for j in range(len(frequencies)):
         #Create timestaps and points of focus stat/stop
         frame_time = np.empty([1])
         imp_times = np.empty(1) #[0] = focus start, [1] = focus stop
-        frame_time = np.append(frame_time, frequency) # Appends the frequecyto as the first value in the timestamps
+        frame_time = np.append(frame_time, voltage)
+        #frame_time = np.append(frame_time, frequency) # Appends the frequecyto as the first value in the timestamps
         
         if different_times:
-            estimated_focustime = times[j] #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
+            estimated_focustime = times[i] #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
         else:
-            estimated_focustime = 6
+            estimated_focustime = 30
         
         #conditions used to control the if conditions
         first = True
