@@ -15,6 +15,7 @@ from AD_func import Connect, disconnect, funcStop, funcGen
 import pandas as pd
 from Valve_control import switchvalve, CheckOpen
 from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 
 # Define functions
 # Function to find the mean value of the frame
@@ -33,15 +34,10 @@ def end_fit(norm_intensities):
     if len(norm_intensities) > 10:
         gradient = np.diff(norm_intensities[-10:])
         mean_gradient = np.mean(gradient) 
-        if mean_gradient < 10**(-4):
+        if abs(mean_gradient) < 5*10**(-6):
             return True
         else:
             return False
-
-def find_closest_to_zero_index(array):
-    absolute_values = np.abs(array)
-    min_index = np.argmin(absolute_values)
-    return min_index
 
 # Function to fit the data to the function
 def func(t, t_star, R, ratio=0.2):
@@ -81,7 +77,7 @@ for i in range(runs):
     converter.OutputPixelFormat = pylon.PixelType_BGR8packed
     converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         
-    newpath = r"D:/New Script/"
+    newpath = r'C:/Users/s102772/Desktop/Test'#r"D:/New Script/"
     if not os.path.exists(newpath):
         os.makedirs(newpath)
         
@@ -113,6 +109,7 @@ for i in range(runs):
     #Create timestaps and points of focus stat/stop
     frame_time = np.array([])
     frame_time = np.append(frame_time, frequency) # Appends the frequency as the first value in the timestamps
+    mean_values = np.array([])
         
     estimated_focustime = 6
         
@@ -174,39 +171,45 @@ for i in range(runs):
                 record_starting_time = time.time()
                 out.write(img)
                 frame_time = np.append(frame_time, time.time())
+                mean_values = np.append(mean_values, mean_value(img))
                 if first: #condition to let the user know that the recording has started.
                     print('Starting recording..')
                     first = 0
                 
             if 21 < current_time - static_time < 22 and opengate: # starts focusing
+                if 'start_index' not in globals():
+                    start_index = len(frame_time)
                 funcGen(freq = frequency, Amplitude = voltage)
                 print("focusing...")
                 opengate = 0
                 print(current_time - static_time)
-                if 'start_index' not in globals():
-                    start_index = len(frame_time)
+
             
 
             if 'start_index' in globals() and end_fit(mean_values) and not opengate: #stops focusing and initiales run stop
-                t = frame_time - imp_times[0]
-                popt, pcov = curve_fit(func, frame_time[start_index:], mean_values(start_index:), p0=[1, 0.005], bounds=([0, 0], [10, 0.05])
-                fitting_parameters = np.append(fitting_parameters, popt)
                 record = 0
                 funcStop()
                 print("focusing stoped")
                 opengate = 1
-                imp_times = np.append(imp_times, time.time())
                 print(current_time - static_time)
                         
-            if not record and current_time - static_time > 22 + estimated_focustime + 2: #stops the recording and ends the run
-                 
+            if not record and end_fit(mean_values): #stops the recording and ends the run
+                mean_values = mean_values/mean_values[-1]
+                t = frame_time[1:] - frame_time[start_index]
+                popt, pcov = curve_fit(func, t[start_index:], mean_values[start_index:], p0=[1, 0.005], bounds=([0, 0], [10, 0.05]))
+                fitting_parameters = np.append(fitting_parameters, popt)
                 cv2.destroyAllWindows()
                 the_time = time.time()
                 df = pd.DataFrame({'Frame time':frame_time})
-                df2 = pd.DataFrame({'Important times':imp_times})
-                df3 = pd.DataFrame({'Fitting parameters (t*)':popt[0], 'Fitting parameters (R)':popt[1]})
-                df.to_csv(newpath + "run"  + str(j) + "." + str(i) + " " + 'Frame time' + '.csv', sep=';', encoding='utf-8')
-                df2.to_csv(newpath + "run"  + str(j) + "." + str(i) + " " +'Important times' + '.csv', sep=';', encoding='utf-8')
+                
+                plt.figure(figsize=(10, 7.5), dpi=300)  # Set the figure size and dpi
+                plt.plot(t, mean_values, 'ro',label='Data')
+                plt.plot(t, func(t, *popt), color='black', label='Fit')
+                plt.axvline(x=0, color='black', linestyle='--', label='_nolabel_')
+                plt.legend(loc='lower right')
+                plt.savefig(f'C:/Users/s102772/Desktop/Test/Run {i}.png')  # Save the plot as 'plot.png'
+                #df3 = pd.DataFrame({'Fitting parameters (t*)':popt[0], 'Fitting parameters (R)':popt[1]})
+                #df.to_csv(newpath + "run"  + str(i) + " " + 'Frame time' + '.csv', sep=';', encoding='utf-8')
                 file.close()
                 break
                 

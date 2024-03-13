@@ -4,6 +4,8 @@ Created on Wed Nov 15 12:44:40 2023
 
 @author: s102772
 """
+import sys
+sys.path.append('C:/Users/s102772/Desktop/Ultrasound_acoustofluidics')
 
 def switchvalve():
     import MXII_valve
