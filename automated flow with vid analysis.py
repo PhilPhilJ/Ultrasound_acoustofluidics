@@ -111,7 +111,6 @@ for i in range(runs):
         
     #Create timestaps and points of focus stat/stop
     frame_time = np.array([])
-    imp_times = np.array([]) #[0] = focus start, [1] = focus stop
     frame_time = np.append(frame_time, frequency) # Appends the frequency as the first value in the timestamps
         
     estimated_focustime = 6
@@ -181,15 +180,15 @@ for i in range(runs):
             if 21 < current_time - static_time < 22 and opengate: # starts focusing
                 funcGen(freq = frequency, Amplitude = voltage)
                 print("focusing...")
-                imp_times = np.append(imp_times, time.time())
                 opengate = 0
                 print(current_time - static_time)
+                if 'start_index' not in globals():
+                    start_index = len(frame_time)
             
-            mean_values = np.append(mean_values, mean_value(img))
 
             if end_fit(mean_values) and not opengate: #stops focusing and initiales run stop
                 t = frame_time - imp_times[0]
-                popt, pcov = curve_fit(func, frame_time[find_closest_to_zero_index(frame_time):], mean_values(find_closest_to_zero_index(frame_time):), p0=[1, 0.005], bounds=([0, 0], [10, 0.05])
+                popt, pcov = curve_fit(func, frame_time[start_index:], mean_values(start_index:), p0=[1, 0.005], bounds=([0, 0], [10, 0.05])
                 fitting_parameters = np.append(fitting_parameters, popt)
                 record = 0
                 funcStop()
