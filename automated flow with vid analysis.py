@@ -16,6 +16,7 @@ import pandas as pd
 from Valve_control import switchvalve, CheckOpen
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Button
 
 # Define functions
 
@@ -29,14 +30,14 @@ def assign_min(event): #A function that assigns the threshold value given by the
     global index_left_side
     index_left_side = int(globals()['slider_val'])
     print('The min threshold has been set to: ' + str(round(index_left_side,0)))
-    if 'index_right_side' in globals() and 'focus_point' in globals():
+    if 'index_right_side' in globals():
         plt.close(fig)
 
 def assign_max(event): #A function that assigns the threshold value given by the slider
     global index_right_side
     index_right_side = int(globals()['slider_val'])
     print('The max threshold has been set to: ' + str(round(index_right_side,0)))
-    if 'index_left_side' in globals() and 'focus_point' in globals():
+    if 'index_left_side' in globals():
         plt.close(fig)
 
 # Function to find the mean value of the frame
@@ -44,7 +45,18 @@ def mean_value(frame, ratio=0.2):
     center_col = frame.shape[1] // 2
     left_col = int(center_col - (center_col * ratio))
     right_col = int(center_col + (center_col * ratio))
+    
+    l_lc = np.size(frame[:, :left_col], axis=1)
+    l_rc = np.size(frame[:, right_col:], axis=1)
+    
+    if l_lc != l_rc:
+        if l_lc > l_rc:
+            left_col = left_col - (l_lc-l_rc)
+        else:
+            left_col = left_col + (l_lc-l_rc)
+    
     cropped_frame = np.concatenate([frame[:, :left_col], frame[:, right_col:]])
+                
         
     mean_value = np.mean(cropped_frame)
 
@@ -70,6 +82,7 @@ camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 converter = pylon.ImageFormatConverter()
 
 #################### Crop image data ####################
+countOfImagesToGrab = 1
 camera.StartGrabbingMax(countOfImagesToGrab)
 # converting to opencv bgr format
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
@@ -80,8 +93,9 @@ while camera.IsGrabbing():
     if grabResult.GrabSucceeded():
         # Access the image data
         image = converter.Convert(grabResult)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img = image.GetArray()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        frame_length = np.size(img, axis=1)
         k = cv2.waitKey(1)
         if k == 27:
             break
@@ -96,7 +110,7 @@ ax1.imshow(img, cmap='gray')
 
 ax2 = ax1.twinx() #Intensities
 ax2.set_ylabel('Intensity [0;255]')
-ax2.plot(np.arange(0, frame_length), np.mean(frame, axis=0), color='r')
+ax2.plot(np.arange(0, frame_length), np.mean(img, axis=0), color='r')
 
 #ax3 = ax1.twinx() #Intensities
 ax3 = ax1.twinx()
@@ -118,7 +132,7 @@ button_max = Button(max_val, 'Max', hovercolor='0.975')
 
 button_min.on_clicked(assign_min)
 button_max.on_clicked(assign_max)
-
+#%%
 ##################### Main script #####################
 print('Press ESC to close the window')
 
