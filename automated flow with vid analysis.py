@@ -186,7 +186,7 @@ for i in range(runs):
                     start_index = len(frame_time)
             
 
-            if end_fit(mean_values) and not opengate: #stops focusing and initiales run stop
+            if 'start_index' in globals() and end_fit(mean_values) and not opengate: #stops focusing and initiales run stop
                 t = frame_time - imp_times[0]
                 popt, pcov = curve_fit(func, frame_time[start_index:], mean_values(start_index:), p0=[1, 0.005], bounds=([0, 0], [10, 0.05])
                 fitting_parameters = np.append(fitting_parameters, popt)
