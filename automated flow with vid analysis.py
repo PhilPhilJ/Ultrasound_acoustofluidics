@@ -14,6 +14,7 @@ import numpy as np
 from AD_func import Connect, disconnect, funcStop, funcGen
 import pandas as pd
 from Valve_control import switchvalve, CheckOpen
+from scipy.optimize import curve_fit
 
 # Define functions
 # Function to find the mean value of the frame
@@ -62,7 +63,7 @@ Connect()
 fitting_parameters = np.array([[],[]]) # array to store the fitting parameters
 
 frequency = 1.8975 # frequency in MHz  
-runs = 100
+runs = 2
     
 for i in range(runs):
 
@@ -80,7 +81,7 @@ for i in range(runs):
     converter.OutputPixelFormat = pylon.PixelType_BGR8packed
     converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         
-    newpath = r"D:/High concentration/Gauss on same frequency/"
+    newpath = r"D:/New Script/"
     if not os.path.exists(newpath):
         os.makedirs(newpath)
         
@@ -89,7 +90,7 @@ for i in range(runs):
     FPS = 20 # Frames per second of camera
     fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
     out = cv2.VideoWriter(newpath +
-                            "run "  + str(j) + "." + str(i) +
+                            "run " + str(i) +
                             '.mp4', fourcc, FPS, size, False) #Change path to saved location
         
     ##other parameters
@@ -99,7 +100,7 @@ for i in range(runs):
     lamp = "10 V and 3.5 A"
     Alg_gen = 'Mix (1.1 + 3.2 + 3.21 + 2.3)'
     voltage = 1
-    file = open(newpath + "run "  + str(j) + "." + str(i) +'.txt', 'w')
+    file = open(newpath + "run " + str(i) +'.txt', 'w')
     file.write("Temperature =" + str(temp) + 
                 ", humidity =" + str(humid) + 
                 ", Gain =" + str(gain) + 
@@ -222,8 +223,8 @@ for i in range(runs):
             switchvalve()
             print("The GTCH was open and is now closed")
         break
-if terminate:
-    break
+#if terminate:
+#   break
 ## Closing everything
 disconnect()
 arduinoSer.write(b'0')
