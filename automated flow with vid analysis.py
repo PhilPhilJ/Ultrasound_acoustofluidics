@@ -80,7 +80,7 @@ def mean_grad(norm_intensities):
     
 def end_fit_2(mean_gradients):
     if len(mean_gradients) > 1:
-        if abs(mean_gradients[-2]) >  abs(mean_gradients[-1])
+        if abs(mean_gradients[-2]) >  abs(mean_gradients[-1]):
             return True
         else:
             return False
