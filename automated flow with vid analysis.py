@@ -223,6 +223,7 @@ for i in range(runs):
         switchvalve()
         print("The GTCH was open and is now closed")
         
+    i = 0
     #camara loop
     while camera.IsGrabbing():
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -284,6 +285,8 @@ for i in range(runs):
                 print("focusing...")
                 opengate = 0
                 print(current_time - static_time)
+
+            if 'start_index' in globals() and i%10 == 0:
                 mean_gradients = np.append(mean_gradients, mean_grad(mean_values))
 
             if 'start_index' in globals() and end_fit_2(mean_gradients) and not opengate: #stops focusing and initiales run stop
@@ -312,7 +315,7 @@ for i in range(runs):
                 #df.to_csv(newpath + "run"  + str(i) + " " + 'Frame time' + '.csv', sep=';', encoding='utf-8')
                 file.close()
                 break
-                
+        i += 1
         grabResult.Release()
         
     # Releasing the resource    
