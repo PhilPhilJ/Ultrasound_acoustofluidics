@@ -51,9 +51,9 @@ def mean_value(frame, ratio=0.2):
     
     if l_lc != l_rc:
         if l_lc > l_rc:
-            left_col = left_col - (l_lc-l_rc)
+            left_col = left_col - abs(l_lc-l_rc)
         else:
-            left_col = left_col + (l_lc-l_rc)
+            left_col = left_col + abs(l_lc-l_rc)
     
     cropped_frame = np.concatenate([frame[:, :left_col], frame[:, right_col:]])
                 
