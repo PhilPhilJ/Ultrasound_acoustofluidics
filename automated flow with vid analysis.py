@@ -74,7 +74,7 @@ def end_fit(norm_intensities):
 
 def mean_grad(norm_intensities):
     if len(norm_intensities) > 10:
-        gradient = np.diff(norm_intensities[-15:])
+        gradient = np.diff(norm_intensities[-10:])
         mean_gradient = np.mean(gradient) 
         return mean_gradient
     
