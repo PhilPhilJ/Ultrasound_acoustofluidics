@@ -74,7 +74,7 @@ def end_fit(norm_intensities):
 
 def mean_grad(norm_intensities):
     if len(norm_intensities) > 10:
-        gradient = np.diff(norm_intensities[-10:])
+        gradient = np.diff(norm_intensities[-15:])
         mean_gradient = np.mean(gradient) 
         return mean_gradient
     
@@ -273,7 +273,6 @@ for i in range(runs):
                 out.write(img)
                 frame_time = np.append(frame_time, time.time())
                 mean_values = np.append(mean_values, mean_value(img))
-                mean_gradients = np.append(mean_gradients, mean_grad(mean_values))
                 if first: #condition to let the user know that the recording has started.
                     print('Starting recording..')
                     first = 0
@@ -285,6 +284,7 @@ for i in range(runs):
                 print("focusing...")
                 opengate = 0
                 print(current_time - static_time)
+                mean_gradients = np.append(mean_gradients, mean_grad(mean_values))
 
             if 'start_index' in globals() and end_fit_2(mean_gradients) and not opengate: #stops focusing and initiales run stop
                 record = 0
