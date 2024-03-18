@@ -72,6 +72,20 @@ def end_fit(norm_intensities):
         else:
             return False
 
+def mean_grad(norm_intensities):
+    if len(norm_intensities) > 10:
+        gradient = np.diff(norm_intensities[-10:])
+        mean_gradient = np.mean(gradient) 
+        return mean_gradient
+    
+def end_fit_2(mean_gradients):
+    if len(mean_gradients) > 1:
+        if abs(mean_gradients[-2]) >  abs(mean_gradients[-1])
+            return True
+        else:
+            return False
+
+
 # Function to fit the data to the function
 def func(t, t_star, R, ratio=0.2):
     k = np.pi*(1-ratio)/2
@@ -151,7 +165,8 @@ runs = 2
 
 # Define array to store the mean values
 mean_values = np.array([])
-        
+# Define array to store mean gradients
+mean_gradients = np.array([])
 
 # Grabing Continusely (video) with minimal delay
 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
@@ -167,7 +182,7 @@ for i in range(runs):
         os.makedirs(newpath)
         
     #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
-    size = (1440, 1080) # Camera resoloution: 4504x4504px, FPS: 18
+    size = (1440, 1080) # Camera resoloution: 1440x1080px, FPS: 18
     FPS = 20 # Frames per second of camera
     fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
     out = cv2.VideoWriter(newpath +
@@ -254,11 +269,11 @@ for i in range(runs):
                 print(current_time - static_time)
                     
             if record == True: #recording is on and timestamps are recorded
-
                 record_starting_time = time.time()
                 out.write(img)
                 frame_time = np.append(frame_time, time.time())
                 mean_values = np.append(mean_values, mean_value(img))
+                mean_gradients = np.append(mean_gradients, mean_grad(mean_values))
                 if first: #condition to let the user know that the recording has started.
                     print('Starting recording..')
                     first = 0
@@ -271,16 +286,14 @@ for i in range(runs):
                 opengate = 0
                 print(current_time - static_time)
 
-            
-
-            if 'start_index' in globals() and end_fit(mean_values) and not opengate: #stops focusing and initiales run stop
+            if 'start_index' in globals() and end_fit_2(mean_gradients) and not opengate: #stops focusing and initiales run stop
                 record = 0
                 funcStop()
                 print("focusing stoped")
                 opengate = 1
                 print(current_time - static_time)
                         
-            if not record and end_fit(mean_values): #stops the recording and ends the run
+            if not record and end_fit_2(mean_gradients): #stops the recording and ends the run
                 mean_values = mean_values/mean_values[-1]
                 t = frame_time[1:] - frame_time[start_index]
                 popt, pcov = curve_fit(func, t[start_index:], mean_values[start_index:], p0=[1, 0.005], bounds=([0, 0], [10, 0.05]))
