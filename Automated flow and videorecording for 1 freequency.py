@@ -52,11 +52,11 @@ for j in range(0,1):
     frequency = frequencies[j]    
     
     #if only single frequency is wanted
-    single_frequecy = 0
+    single_frequecy = 1
     if single_frequecy == True:
         frequency = 1.898
         
-    runs = 1
+    runs = 200
     
     for i in range(runs):
         
@@ -71,7 +71,7 @@ for j in range(0,1):
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         
-        newpath = r"C:/Users/s102772/Desktop/Mervan"
+        newpath = r"D:\Special course spring 2024\Data\Temperature dependence experiment/"
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         
@@ -89,7 +89,7 @@ for j in range(0,1):
         gain = "10 dB"
         lamp = "10 V and 3.5 A"
         Alg_gen = 'Mix (1.1 + 3.2 + 3.21 + 2.3)'
-        voltage = 5
+        voltage = 2
         file = open(newpath + "run "  + str(j) + "." + str(i) +'.txt', 'w')
         file.write("Temperature =" + str(temp) + 
                    ", humidity =" + str(humid) + 
@@ -109,7 +109,7 @@ for j in range(0,1):
         if different_times:
             estimated_focustime = times[i] #This is the time + 2 seconds that is the estimated time. Estimate this for each frequency
         else:
-            estimated_focustime = 30
+            estimated_focustime = 15
         
         #conditions used to control the if conditions
         first = True
