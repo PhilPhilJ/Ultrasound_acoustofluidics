@@ -38,12 +38,12 @@ def find_mean_value(vid, ratio=0.2):
     return mean_values
 
 # Iterate through multiple runs
-num_runs = 10  # Change this to the number of runs you have
+num_runs = 200  # Change this to the number of runs you have
 start_time_1 = time.time()
-for run in range(1, num_runs):
-    video_path = f'/Users/joakimpihl/Desktop/SameFreq/run {run}.mp4'
-    timestamps_path = f'/Users/joakimpihl/Desktop/SameFreq/Time Stamps {run}.csv'
-    important_timestamps_path = f'/Users/joakimpihl/Desktop/SameFreq/Important times {run}.csv'
+for run in range(0, num_runs):
+    video_path = f'/Users/joakimpihl/Desktop/Run (20:03:24)/run {run}.mp4'
+    timestamps_path = f'/Users/joakimpihl/Desktop/Run (20:03:24)/Time Stamps {run}.csv'
+    important_timestamps_path = f'/Users/joakimpihl/Desktop/Run (20:03:24)/Important times {run}.csv'
 
     # Load video, timestamps, and important timestamps
     vid = cv2.VideoCapture(video_path)
@@ -70,7 +70,7 @@ for run in range(1, num_runs):
     plt.plot(t, func(t, *popt), color='black', label='Fit')
     plt.axvline(x=t[start_index], color='black', linestyle='--', label='_nolabel_')
     plt.legend(loc='lower right')
-    plt.savefig(f'/Users/joakimpihl/Desktop/Test/Plots/Run {run}.png')  # Save the plot as 'plot.png'
+    plt.savefig(f'/Users/joakimpihl/Desktop/Run result/Plots/Run {run}.png')  # Save the plot as 'plot.png'
     plt.show()
 
     # Find the R_squared value
@@ -80,10 +80,10 @@ for run in range(1, num_runs):
     r_squared = 1 - (ss_res / ss_tot)
 
     # Export the fitted parameters and the R_squared value to a csv file
-    #if run == 1:
-    #    data = pd.DataFrame(columns=['Frequency', 't_star', 'R', 'R_squared'])
-    #data = data.append({'Frequency': frequency, 't_star': popt[0], 'R': popt[1], 'R_squared': r_squared}, ignore_index=True)
-    #if run == num_runs:
-    #    data.to_csv('/Users/joakimpihl/Desktop/Test/ImportantParameters.csv', index=False)
+    data = pd.DataFrame({'Frequency': [frequency], 't_star': [popt[0]], 'R': [popt[1]], 'R_squared': [r_squared]})
+    if run == 0:
+        data.to_csv('/Users/joakimpihl/Desktop/Run result/ImportantParameters.csv', header=True)
+    else:
+        data.to_csv('/Users/joakimpihl/Desktop/Run result/ImportantParameters.csv', header=False, mode='a')
 end_time = time.time()
 print(f'Time elapsed: {end_time - start_time_1} seconds')
