@@ -84,6 +84,8 @@ def end_fit_2(mean_gradients):
             return True
         else:
             return False
+    else:
+        return False
 
 
 # Function to fit the data to the function
@@ -160,13 +162,8 @@ Connect()
 
 fitting_parameters = np.array([[],[]]) # array to store the fitting parameters
 
-frequency = 1.8975 # frequency in MHz  
+frequency = 1.898 # frequency in MHz  
 runs = 2
-
-# Define array to store the mean values
-mean_values = np.array([])
-# Define array to store mean gradients
-mean_gradients = np.array([])
 
 # Grabing Continusely (video) with minimal delay
 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
@@ -176,18 +173,15 @@ converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
 for i in range(runs):       
-
-    newpath = r'C:/Users/s102772/Desktop/Test'#r"D:/New Script/"
+    plt.close('all')
+    newpath = r'C:/Users/s102772/Desktop/Test/'#r"D:/New Script/"
     if not os.path.exists(newpath):
         os.makedirs(newpath)
-        
-    #cap = cv2.VideoCapture(0) #VideoCapture object which stores the frames, the argument is just the device index (may be 0, or -1)
-    size = (1440, 1080) # Camera resoloution: 1440x1080px, FPS: 18
-    FPS = 20 # Frames per second of camera
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v") #Defines output format, mp4
-    out = cv2.VideoWriter(newpath +
-                            "run " + str(i) +
-                            '.mp4', fourcc, FPS, size, False) #Change path to saved location
+    
+    # Define array to store the mean values
+    mean_values = np.array([])
+    # Define array to store mean gradients
+    mean_gradients = np.array([])
         
     ##other parameters
     temp = "24 C"
@@ -222,8 +216,12 @@ for i in range(runs):
     if CheckOpen() == True:
         switchvalve()
         print("The GTCH was open and is now closed")
+    
+    if 'start_index' in globals() and 'extra_time' in globals():
+        del start_index, extra_time
         
-    i = 0
+    j = 0
+    done = 0
     #camara loop
     while camera.IsGrabbing():
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -271,7 +269,6 @@ for i in range(runs):
                     
             if record == True: #recording is on and timestamps are recorded
                 record_starting_time = time.time()
-                out.write(img)
                 frame_time = np.append(frame_time, time.time())
                 mean_values = np.append(mean_values, mean_value(img))
                 if first: #condition to let the user know that the recording has started.
@@ -286,17 +283,22 @@ for i in range(runs):
                 opengate = 0
                 print(current_time - static_time)
 
-            if 'start_index' in globals() and i%10 == 0:
+            if 'start_index' in globals() and j%10 == 0:
                 mean_gradients = np.append(mean_gradients, mean_grad(mean_values))
+                
+            if end_fit_2(mean_gradients) and done == 0:
+                extra_time = time.time()
+                done = 1
 
-            if 'start_index' in globals() and end_fit_2(mean_gradients) and not opengate: #stops focusing and initiales run stop
+            if 'start_index' in globals() and end_fit_2(mean_gradients) and not opengate and (current_time-extra_time >= 3): #stops focusing and initiales run stop
                 record = 0
                 funcStop()
                 print("focusing stoped")
                 opengate = 1
                 print(current_time - static_time)
+            
                         
-            if not record and end_fit_2(mean_gradients): #stops the recording and ends the run
+            if not record and end_fit_2(mean_gradients) and (current_time-extra_time >= 3): #stops the recording and ends the run
                 mean_values = mean_values/mean_values[-1]
                 t = frame_time[1:] - frame_time[start_index]
                 popt, pcov = curve_fit(func, t[start_index:], mean_values[start_index:], p0=[1, 0.005], bounds=([0, 0], [10, 0.05]))
@@ -310,28 +312,20 @@ for i in range(runs):
                 plt.plot(t, func(t, *popt), color='black', label='Fit')
                 plt.axvline(x=0, color='black', linestyle='--', label='_nolabel_')
                 plt.legend(loc='lower right')
-                plt.savefig(f'C:/Users/s102772/Desktop/Test/Run {i}.png')  # Save the plot as 'plot.png'
-                #df3 = pd.DataFrame({'Fitting parameters (t*)':popt[0], 'Fitting parameters (R)':popt[1]})
-                #df.to_csv(newpath + "run"  + str(i) + " " + 'Frame time' + '.csv', sep=';', encoding='utf-8')
-                file.close()
+                plt.savefig(newpath + f'Run {i}.png')  # Save the plot as 'plot.png'
+                df_fit = pd.DataFrame({'Run':[i], 'Frequency':[frequency],'Fitting parameters (t*)':popt[0], 'Fitting parameters (R)':popt[1]})
+                df.to_csv(newpath + f'run {i} Frame time.csv', sep=';', encoding='utf-8')
+                if i == 0:
+                    df_fit.to_csv(newpath + 'Parameters.csv', header=True)
+                else:
+                    df_fit.to_csv(newpath + 'Parameters.csv', header=False, mode='a')
                 break
-        i += 1
+        j += 1
         grabResult.Release()
-        
-    # Releasing the resource    
-    camera.StopGrabbing()
-    out.release() 
-    
-    if terminate:
-        cv2.destroyAllWindows()
-        funcStop()
-        if CheckOpen() == True:
-            switchvalve()
-            print("The GTCH was open and is now closed")
-        break
-#if terminate:
-#   break
-## Closing everything
+
+## Closing everything 
+camera.StopGrabbing()
+plt.close('all')
 disconnect()
 arduinoSer.write(b'0')
 arduinoSer.close()
