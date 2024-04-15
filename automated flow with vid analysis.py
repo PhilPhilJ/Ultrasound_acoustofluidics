@@ -77,12 +77,6 @@ def end_fit_2(mean_gradients):
             return False
     else:
         return False
-    
-# Function to find the temperature
-def find_temp(tc_voltage):
-    coeffecients = [2.5173462*10, -1.1662878, -1.0833638, -8.9773540*10**(-1), -3.7342377*10**(-1), -8.6632643*10**(-2), -1.0450598*10**(-2), -5.1920577*10**(-4)] # https://srdata.nist.gov/its90/type_k/kcoefficients_inverse.html
-    temperature = coeffecients[0]*tc_voltage + coeffecients[1]*tc_voltage**2 + coeffecients[2]*tc_voltage**3 + coeffecients[3]*tc_voltage**4 + coeffecients[4]*tc_voltage**5 + coeffecients[5]*tc_voltage**6 + coeffecients[6]*tc_voltage**7 + coeffecients[7]*tc_voltage**8 # Fitting polynomial
-    return temperature
 
 # Function to fit the data to the function
 def func(t, t_star, R, ratio=0.2):
@@ -150,6 +144,15 @@ print('Press ESC to close the window')
 
 arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.5)
 arduinoSer.write(b'0') # makes sure the flow is off
+
+# Function to find the temperature
+def find_temp(tc_voltage):
+    voltage1 = arduinoSer.readline().decode().strip()
+    voltage2 = arduinoSer.readline().decode().strip()
+    dV = abs(voltage1-voltage2)
+    coeffecients = [2.5173462*10, -1.1662878, -1.0833638, -8.9773540*10**(-1), -3.7342377*10**(-1), -8.6632643*10**(-2), -1.0450598*10**(-2), -5.1920577*10**(-4)] # https://srdata.nist.gov/its90/type_k/kcoefficients_inverse.html
+    temperature = coeffecients[0]*tc_voltage + coeffecients[1]*tc_voltage**2 + coeffecients[2]*tc_voltage**3 + coeffecients[3]*tc_voltage**4 + coeffecients[4]*tc_voltage**5 + coeffecients[5]*tc_voltage**6 + coeffecients[6]*tc_voltage**7 + coeffecients[7]*tc_voltage**8 # Fitting polynomial
+    return temperature
 
 terminate = 0 #condition for breaking the for loop
 

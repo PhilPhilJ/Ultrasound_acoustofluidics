@@ -5,7 +5,7 @@ port = 'COM3'  # Replace with the appropriate port
 baudrate = 9600  # Replace with the appropriate baudrate
 
 # Create a serial connection
-arduino = serial.Serial(port, baudrate)
+arduino = serial.Serial(port, baudrate, timeout=0.5)
 
 # Main loop
 while True:
@@ -14,5 +14,5 @@ while True:
     voltage2 = arduino.readline().decode().strip()
     
     # Print the voltage values
-    print(f"Voltage on pin 0: {voltage1}")
-    print(f"Voltage on pin 1: {voltage2}")
+    #print(f"Voltage on pin 0: {voltage1}")
+    #print(f"Voltage on pin 1: {voltage2}")
