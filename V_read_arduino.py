@@ -1,18 +1,18 @@
-import pyfirmata
+import serial
 
 # Define the Arduino board port
-board = pyfirmata.Arduino('/dev/ttyACM0')  # Replace with the appropriate port
+port = 'COM3'  # Replace with the appropriate port
+baudrate = 9600  # Replace with the appropriate baudrate
 
-# Define the analog pins
-analog_pin1 = board.get_pin('a:0:i')  # Replace 'a:0:i' with the pin number you want to read from
-analog_pin2 = board.get_pin('a:1:i')  # Replace 'a:1:i' with the pin number you want to read from
+# Create a serial connection
+arduino = serial.Serial(port, baudrate)
 
 # Main loop
 while True:
     # Read the voltage from the analog pins
-    voltage1 = analog_pin1.read()
-    voltage2 = analog_pin2.read()
-
+    voltage1 = arduino.readline().decode().strip()
+    voltage2 = arduino.readline().decode().strip()
+    
     # Print the voltage values
     print(f"Voltage on pin 0: {voltage1}")
     print(f"Voltage on pin 1: {voltage2}")
