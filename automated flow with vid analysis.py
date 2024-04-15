@@ -63,15 +63,6 @@ def mean_value(frame, ratio=0.2):
     return mean_value
 
 # Function to check if the gradient of the last 10 values is less than 0.01
-def end_fit(norm_intensities):
-    if len(norm_intensities) > 10:
-        gradient = np.diff(norm_intensities[-10:])
-        mean_gradient = np.mean(gradient) 
-        if abs(mean_gradient) < 5*10**(-6):
-            return True
-        else:
-            return False
-
 def mean_grad(norm_intensities):
     if len(norm_intensities) > 10:
         gradient = np.diff(norm_intensities[-10:])
@@ -86,7 +77,12 @@ def end_fit_2(mean_gradients):
             return False
     else:
         return False
-
+    
+# Function to find the temperature
+def find_temp(tc_voltage):
+    coeffecients = [2.5173462*10, -1.1662878, -1.0833638, -8.9773540*10**(-1), -3.7342377*10**(-1), -8.6632643*10**(-2), -1.0450598*10**(-2), -5.1920577*10**(-4)] # https://srdata.nist.gov/its90/type_k/kcoefficients_inverse.html
+    temperature = coeffecients[0]*tc_voltage + coeffecients[1]*tc_voltage**2 + coeffecients[2]*tc_voltage**3 + coeffecients[3]*tc_voltage**4 + coeffecients[4]*tc_voltage**5 + coeffecients[5]*tc_voltage**6 + coeffecients[6]*tc_voltage**7 + coeffecients[7]*tc_voltage**8 # Fitting polynomial
+    return temperature
 
 # Function to fit the data to the function
 def func(t, t_star, R, ratio=0.2):
