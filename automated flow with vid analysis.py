@@ -20,6 +20,64 @@ from matplotlib.widgets import Slider, Button
 
 # Define functions
 
+# Function to retrieve Arduino voltages
+def read_arduino(V_input=5):
+    # Input voltage is 5V
+    # Read the voltage from the analog pins
+    # Pins for Thermocouple
+    V_1 = arduino.readline().decode().strip() # Voltage on pin 0
+    V_2 = arduino.readline().decode().strip() # Voltage on pin 2
+
+    # Pins for thermistor
+    V_4 = arduino.readline().decode().strip()  # Voltage on pin 4
+    return V_1, V_2, V_4
+
+# Function to find absolute temperature
+# The function is not complete ###########
+def abs_temp(V_thermistor, V_input=5, R_R=62):
+    # Resistance are of units Ohm
+    # Voltages are of units V
+
+    # Resistance of the thermistor
+    R = (V_input / float(V_thermistor) - 1) * R_R
+
+
+
+    Rf = 0.7 # Resistance at T=50C
+    Ri = 0.8 # Resistance at T=25C
+    Tf = 50 # Temperature at Rf
+    Ti = 25 # Temperature at Ri
+
+    # Slope of the curve
+    m = (Rf - Ri) / (Tf - Ti)
+    # Intercept of the curve
+    c = Ri - m * Ti
+
+    return abs_temp
+
+# Thermocouple function
+def thermocouple(V_thermocouple_1, V_thermocouple_2):
+    # Polynominal coefficients (0C - 500C) - Source: https://srdata.nist.gov/its90/type_k/kcoefficients_inverse.html
+    d0 = 0
+    d1 = 2.508355 * 10
+    d2 = 7.860106 * 10 ** -2
+    d3 = -2.503131 * 10 ** -1
+    d4 = 8.315270 * 10 ** -2
+    d5 = -1.228034 * 10 ** -2
+    d6 = 9.804036 * 10 ** -4
+    d7 = -4.413030 * 10 ** -5
+    d8 = 1.057734 * 10 ** -6
+    d9 = -1.052755 * 10 ** -8
+
+    # Voltage of the thermocouple
+    V_thermocouple = abs(V_thermocouple_1 - V_thermocouple_2)
+
+    # Temperature of the thermocouple
+    temp_thermocouple = d0 + d1 * V_thermocouple + d2 * V_thermocouple ** 2 + d3 * V_thermocouple ** 3 + d4 * V_thermocouple ** 4 + d5 * V_thermocouple ** 5 + d6 * V_thermocouple ** 6 + d7 * V_thermocouple ** 7 + d8 * V_thermocouple ** 8 + d9 * V_thermocouple ** 9
+
+    return temp_thermocouple
+
+
 def update(val): # The function to be called anytime a slider's value changes
     global slider_val
     slider_val = val
