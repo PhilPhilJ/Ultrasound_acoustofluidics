@@ -22,9 +22,13 @@ from matplotlib.widgets import Slider, Button
 # Function to retrieve Arduino voltages
 def find_temp():
     # Read the temperature from the MAX6675
-    raw_temp = arduino.readline().decode().strip() # Voltage on pin 0
-    temp = float(raw_temp)
-
+    raw_temp = arduinoSer.readline().decode().strip() # Temperature in degrees celsius
+    
+    if raw_temp:
+        temp = float(raw_temp)
+    else:
+        temp = np.nan
+    
     return temp
 
 # Fifth degree polynomial to find temperature dependance of the resonant frequency
@@ -162,12 +166,16 @@ button_max = Button(max_val, 'Max', hovercolor='0.975')
 
 button_min.on_clicked(assign_min)
 button_max.on_clicked(assign_max)
+
+arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.25)
+arduinoSer.write(b'0') # makes sure the flow is off
+
 #%%
 ##################### Main script #####################
 print('Press ESC to close the window')
 
-arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.5)
-arduinoSer.write(b'0') # makes sure the flow is off
+#arduinoSer = serial.Serial('COM3',baudrate=9600,timeout=0.5)
+#arduinoSer.write(b'0') # makes sure the flow is off
 
 terminate = 0 #condition for breaking the for loop
 
@@ -203,16 +211,19 @@ for i in range(runs):
     if i == 0:
         T0 = find_temp()
         cs0 = speed_of_sound(T0+273.15)
-        len_temp_0 = np.append(len_temp_array, len(temperature_array))
+        len_temp_array = np.append(len_temp_array, len(temperature_array))
+        len_temp_array_0 = len_temp_array[0]
         frequency = frequency0
     else:
-        len_temp_1 = np.append(len_temp_array, len(temperature_array))
-        delta_len_temp = len_temp_1 - len_temp_0
-        T1 = np.mean(temperature_array[-delta_len_temp:])
+        len_temp_array = np.append(len_temp_array, len(temperature_array))
+        len_temp_f = len_temp_array[-1]
+        len_temp_i = len_temp_array[-2]
+        delta_len_temp = int(len_temp_f - len_temp_i)
+        T1 = np.nanmean(temperature_array[-delta_len_temp:])
         if round(T1,1) != round(T0,1):
             cs1 = speed_of_sound(T1+273.15)
             frequency = frequency0 * cs1/cs0
-        
+
     ##other parameters
     temp = "24 C"
     humid = "19%"
