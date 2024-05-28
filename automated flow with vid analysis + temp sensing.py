@@ -198,6 +198,20 @@ for i in range(runs):
     mean_values = np.array([])
     # Define array to store mean gradients
     mean_gradients = np.array([])
+    
+    # Check if the frequency should be changed
+    if i == 0:
+        T0 = find_temp()
+        cs0 = speed_of_sound(T0+273.15)
+        len_temp_0 = np.append(len_temp_array, len(temperature_array))
+        frequency = frequency0
+    else:
+        len_temp_1 = np.append(len_temp_array, len(temperature_array))
+        delta_len_temp = len_temp_1 - len_temp_0
+        T1 = np.mean(temperature_array[-delta_len_temp:])
+        if round(T1,1) != round(T0,1):
+            cs1 = speed_of_sound(T1+273.15)
+            frequency = frequency0 * cs1/cs0
         
     ##other parameters
     temp = "24 C"
@@ -220,23 +234,10 @@ for i in range(runs):
     frame_time = np.array([])
     frame_time = np.append(frame_time, frequency) # Appends the frequency as the first value in the timestamps
     mean_values = np.array([])
-        
+    
+    # Define the estimated focus time
     estimated_focustime = 6
-
-    # Check if the frequency should be changed
-    if i == 0:
-        T0 = find_temp()
-        cs0 = speed_of_sound(T0+273.15)
-        len_temp_0 = np.append(len_temp_array, len(temperature_array))
-        frequency = frequency0
-    else:
-        len_temp_1 = np.append(len_temp_array, len(temperature_array))
-        delta_len_temp = len_temp_1 - len_temp_0
-        T1 = np.mean(temperature_array[-delta_len_temp:])
-        if round(T1,1) != round(T0,1):
-            cs1 = speed_of_sound(T1+273.15)
-            frequency = frequency0 * cs1/cs0
-        
+  
     #conditions used to control the if conditions
     first = True
     static_time = time.time()
